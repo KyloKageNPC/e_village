@@ -7,164 +7,74 @@ import '../services/group_service.dart';
 class GroupProvider with ChangeNotifier {
   final GroupService _groupService = GroupService();
 
-  List<VillageGroup> _groups = [];
   VillageGroup? _selectedGroup;
+  List<VillageGroup> _userGroups = [];
+  List<VillageGroup> _allGroups = [];
   List<GroupMember> _groupMembers = [];
+  GroupMember? _currentMembership;
   bool _isLoading = false;
   String? _errorMessage;
 
-  List<VillageGroup> get groups => _groups;
   VillageGroup? get selectedGroup => _selectedGroup;
+  List<VillageGroup> get userGroups => _userGroups;
+  List<VillageGroup> get allGroups => _allGroups;
   List<GroupMember> get groupMembers => _groupMembers;
+  GroupMember? get currentMembership => _currentMembership;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get hasSelectedGroup => _selectedGroup != null;
 
-  // Initialize and load saved group selection
+  bool get isChairperson => _currentMembership?.role == MemberRole.chairperson;
+  bool get isTreasurer => _currentMembership?.role == MemberRole.treasurer;
+  bool get isSecretary => _currentMembership?.role == MemberRole.secretary;
+  bool get isOfficer => isChairperson || isTreasurer || isSecretary;
+  bool get canApproveLoans => _currentMembership?.canApproveLoans ?? false;
+  bool get canManageGroup => _currentMembership?.canManageGroup ?? false;
+
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedGroupId = prefs.getString('selected_group_id');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedGroupId = prefs.getString('selected_group_id');
 
-    if (savedGroupId != null) {
-      try {
-        _selectedGroup = await _groupService.getGroupById(savedGroupId);
+      if (savedGroupId != null) {
+        final group = await _groupService.getGroupById(savedGroupId);
+        _selectedGroup = group;
         notifyListeners();
-      } catch (e) {
-        debugPrint('Error loading saved group: $e');
       }
-    }
-  }
-
-  // Select a group and save to preferences
-  Future<void> selectGroup(VillageGroup group) async {
-    _selectedGroup = group;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selected_group_id', group.id);
-
-    notifyListeners();
-
-    // Load group members after selection
-    await loadGroupMembers(group.id);
-  }
-
-  // Clear group selection
-  Future<void> clearSelection() async {
-    _selectedGroup = null;
-    _groupMembers = [];
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('selected_group_id');
-
-    notifyListeners();
-  }
-
-  // Load all available groups
-  Future<void> loadAllGroups() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      _groups = await _groupService.getAllGroups();
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      debugPrint('Error initializing GroupProvider: $e');
     }
   }
 
-  // Create a new group
-  Future<VillageGroup?> createGroup({
-    required String name,
-    String? description,
-    String? location,
-    String? meetingSchedule,
-    required String createdBy,
-  }) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
+  Future<void> selectGroup(VillageGroup group, String userId) async {
     try {
-      final group = await _groupService.createGroup(
-        name: name,
-        description: description,
-        location: location,
-        meetingSchedule: meetingSchedule,
-        createdBy: createdBy,
-      );
-
-      _groups.insert(0, group);
-      _isLoading = false;
-      notifyListeners();
-
-      return group;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return null;
-    }
-  }
-
-  // Join a group
-  Future<bool> joinGroup({
-    required String groupId,
-    required String userId,
-    MemberRole role = MemberRole.member,
-  }) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      await _groupService.addMemberToGroup(
-        groupId: groupId,
+      final membership = await _groupService.getMemberRole(
+        groupId: group.id,
         userId: userId,
-        role: role,
       );
 
-      // Reload the group to get updated member count
-      final group = await _groupService.getGroupById(groupId);
-      await selectGroup(group);
+      if (membership != null && membership.status == MemberStatus.active) {
+        _selectedGroup = group;
+        _currentMembership = membership;
 
-      _isLoading = false;
-      notifyListeners();
-      return true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('selected_group_id', group.id);
+
+        await loadGroupMembers(groupId: group.id);
+        notifyListeners();
+      }
     } catch (e) {
       _errorMessage = e.toString();
-      _isLoading = false;
       notifyListeners();
-      return false;
     }
   }
 
-  // Load group members
-  Future<void> loadGroupMembers(String groupId) async {
+  Future<void> loadGroupMembers({required String groupId}) async {
     try {
       _groupMembers = await _groupService.getGroupMembers(groupId: groupId);
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading group members: $e');
-    }
-  }
-
-  // Get user's groups
-  Future<void> loadUserGroups(String userId) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      _groups = await _groupService.getUserGroups(userId: userId);
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
     }
   }
 

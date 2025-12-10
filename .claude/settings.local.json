@@ -6,7 +6,8 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: E-Village Banking App Foundation\n\nFeatures:\n- Complete Supabase backend integration\n- User authentication (signup/login)\n- Database schema with 10 tables\n- 6 data models (UserProfile, VillageGroup, Transaction, Loan, etc.)\n- 5 service classes for API operations\n- 3 state providers (Auth, Transaction, Loan)\n- Login and Signup screens\n- Dashboard with balance card and transaction list\n- Loan request popup\n- Row Level Security (RLS) policies\n- Real-time data sync capabilities\n\nArchitecture:\n- Clean separation of concerns (Models, Services, Providers, UI)\n- Provider state management\n- Type-safe Dart models\n- Error handling throughout\n- Scalable folder structure\n\nDocumentation:\n- QUICK_START.md - Get running in 30 minutes\n- SUPABASE_SETUP.md - Detailed backend setup\n- NEXT_STEPS.md - Development roadmap\n- PROJECT_SUMMARY.md - Complete overview\n- supabase_schema.sql - Database schema\n\nBug Fixes:\n- Fixed top_caed.dart:110 (was showing expense twice)\n\nPhase 1: Foundation & Core Banking - 80% Complete\nNext: Connect UI to backend, group selection, transaction creation\n\nGenerated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git ls-tree:*)",
       "Bash(git push:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
