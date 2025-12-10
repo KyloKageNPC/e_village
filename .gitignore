@@ -45,6 +45,10 @@ app.*.map.json
 .env
 .env.local
 
+# Credentials and sensitive files
+assets/credentials.json
+**/credentials.json
+
 # iOS related
 **/ios/**/*.mode1v3
 **/ios/**/*.mode2v3
