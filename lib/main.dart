@@ -6,6 +6,7 @@ import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/loan_provider.dart';
+import 'providers/group_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => LoanProvider()),
+        ChangeNotifierProvider(create: (_) => GroupProvider()..initialize()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {

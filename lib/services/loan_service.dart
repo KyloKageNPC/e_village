@@ -225,7 +225,7 @@ class LoanService {
           .from('loans')
           .select()
           .eq('borrower_id', borrowerId)
-          .in_('status', ['active', 'disbursed'])
+          .inFilter('status', ['active', 'disbursed'])
           .order('created_at', ascending: false);
 
       return (response as List)

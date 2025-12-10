@@ -4,18 +4,47 @@ class MyBottomButton extends StatelessWidget {
   final Color color;
   final Size size;
   final Icon icon;
-  const MyBottomButton({super.key, required this.color, required this.size, required this.icon });
+  const MyBottomButton({super.key, required this.color, required this.size, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-       decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(40),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color,
+            color.withOpacity(0.8),
+          ],
         ),
-        height: size.height,
-        width: size.width,
-        child: icon,
+        borderRadius: BorderRadius.circular(40),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.4),
+            offset: Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.2),
+            offset: Offset(-2, -2),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      height: size.height,
+      width: size.width,
+      child: Center(
+        child: IconTheme(
+          data: IconThemeData(
+            color: Colors.white,
+            size: icon.size ?? 24,
+          ),
+          child: icon,
+        ),
+      ),
     );
   }
 }
