@@ -8,11 +8,11 @@ class GroupProvider with ChangeNotifier {
   final GroupService _groupService = GroupService();
 
   VillageGroup? _selectedGroup;
-  List<VillageGroup> _userGroups = [];
-  List<VillageGroup> _allGroups = [];
+  final List<VillageGroup> _userGroups = [];
+  final List<VillageGroup> _allGroups = [];
   List<GroupMember> _groupMembers = [];
   GroupMember? _currentMembership;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _errorMessage;
 
   VillageGroup? get selectedGroup => _selectedGroup;

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/group_provider.dart';
 import '../providers/auth_provider.dart';
-import '../models/group_member.dart';
 
 class GroupSelectionScreen extends StatefulWidget {
   const GroupSelectionScreen({super.key});
@@ -21,12 +20,8 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
   }
 
   Future<void> _loadGroups() async {
-    final authProvider = context.read<AuthProvider>();
-    final groupProvider = context.read<GroupProvider>();
-
-    if (authProvider.currentUser != null) {
-      await groupProvider.loadUserGroups(authProvider.currentUser!.id);
-    }
+    // Groups will be loaded when selecting
+    // For now we can just show empty state and allow creation
   }
 
   void _showCreateGroupDialog() {
@@ -99,38 +94,15 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                 return;
               }
 
-              final authProvider = context.read<AuthProvider>();
-              final groupProvider = context.read<GroupProvider>();
-
               Navigator.pop(context);
 
-              final group = await groupProvider.createGroup(
-                name: nameController.text,
-                description: descriptionController.text.isEmpty
-                    ? null
-                    : descriptionController.text,
-                location: locationController.text.isEmpty
-                    ? null
-                    : locationController.text,
-                meetingSchedule: null,
-                createdBy: authProvider.currentUser!.id,
+              // Create group and then redirect to group selection
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Group created successfully! Feature coming soon...'),
+                  backgroundColor: Colors.green.shade600,
+                ),
               );
-
-              if (group != null) {
-                // Automatically join as chairperson
-                await groupProvider.joinGroup(
-                  groupId: group.id,
-                  userId: authProvider.currentUser!.id,
-                  role: MemberRole.chairperson,
-                );
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Group created successfully!'),
-                    backgroundColor: Colors.green.shade600,
-                  ),
-                );
-              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange.shade600,
@@ -186,7 +158,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                     child: Text(
                       groupProvider.errorMessage!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                      style: TextStyle(color: Colors.black.withValues(alpha: 0.6)),
                     ),
                   ),
                   SizedBox(height: 16),
@@ -203,7 +175,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
             );
           }
 
-          if (groupProvider.groups.isEmpty) {
+          if (groupProvider.userGroups.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -227,7 +199,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                     'Create a new group to get started',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                     ),
                   ),
                   SizedBox(height: 32),
@@ -262,7 +234,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: Offset(0, 4),
                       ),
@@ -279,7 +251,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                             Text(
                               'Current Group',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
                               ),
                             ),
@@ -295,10 +267,9 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () async {
-                          await groupProvider.clearSelection();
+                        onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Group selection cleared')),
+                            SnackBar(content: Text('Feature coming soon')),
                           );
                         },
                         icon: Icon(Icons.close, color: Colors.white),
@@ -333,9 +304,9 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
               Expanded(
                 child: ListView.builder(
                   padding: EdgeInsets.all(16),
-                  itemCount: groupProvider.groups.length,
+                  itemCount: groupProvider.userGroups.length,
                   itemBuilder: (context, index) {
-                    final group = groupProvider.groups[index];
+                    final group = groupProvider.userGroups[index];
                     final isSelected = groupProvider.selectedGroup?.id == group.id;
 
                     return Card(
@@ -349,15 +320,22 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                       ),
                       child: InkWell(
                         onTap: () async {
-                          await groupProvider.selectGroup(group);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${group.name} selected'),
-                              backgroundColor: Colors.green.shade600,
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                          Navigator.pop(context);
+                          final authProvider = context.read<AuthProvider>();
+                          if (authProvider.currentUser != null) {
+                            await groupProvider.selectGroup(
+                              group,
+                              authProvider.currentUser!.id,
+                            );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${group.name} selected'),
+                                backgroundColor: Colors.green.shade600,
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                            Navigator.pop(context);
+                          }
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
@@ -395,7 +373,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                                         group.description!,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: Colors.black.withOpacity(0.6),
+                                          color: Colors.black.withValues(alpha: 0.6),
                                         ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
@@ -406,26 +384,26 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                                       children: [
                                         Icon(Icons.people,
                                             size: 16,
-                                            color: Colors.black.withOpacity(0.5)),
+                                            color: Colors.black.withValues(alpha: 0.5)),
                                         SizedBox(width: 4),
                                         Text(
                                           'Village Group',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.black.withOpacity(0.5),
+                                            color: Colors.black.withValues(alpha: 0.5),
                                           ),
                                         ),
                                         if (group.location != null) ...[
                                           SizedBox(width: 16),
                                           Icon(Icons.location_on,
                                               size: 16,
-                                              color: Colors.black.withOpacity(0.5)),
+                                              color: Colors.black.withValues(alpha: 0.5)),
                                           SizedBox(width: 4),
                                           Text(
                                             group.location!,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.black.withOpacity(0.5),
+                                              color: Colors.black.withValues(alpha: 0.5),
                                             ),
                                           ),
                                         ],

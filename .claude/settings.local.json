@@ -7,7 +7,8 @@
       "Bash(git ls-tree:*)",
       "Bash(git push:*)",
       "Bash(flutter analyze:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMajor Update: Complete Logic Flow & GroupProvider\n\nAdded comprehensive village banking logic documentation and group management foundation.\n\nNEW FEATURES:\n✨ VILLAGE_BANKING_LOGIC_FLOW.md (900+ lines)\n   - 15 complete workflows documented\n   - User onboarding to profit distribution\n   - State machines for loans, members, meetings\n   - Role-based permission matrix\n   - 50+ UI screens identified\n   - Business rules and validation logic\n   - Transaction type definitions\n   - Security considerations\n\n✨ GroupProvider (State Management)\n   - Group selection with persistence\n   - Role-based permission checking\n   - Member management capabilities\n   - Integration with SharedPreferences\n   - Support for multiple groups per user\n\n📚 PROGRESS_UPDATE.md\n   - Current status: Phase 1 @ 85%\n   - Detailed action plan\n   - Screen priorities\n   - Technical debt tracking\n   - Success metrics defined\n\nIMPROVEMENTS:\n- Created lib/screens/group/ directory\n- Updated main.dart with GroupProvider\n- Enhanced .gitignore for credentials\n\nDOCUMENTATION:\n- Complete logic flow for all features\n- Voice note capabilities documented\n- Group chat requirements specified\n- Mobile money integration planned\n\nNEXT STEPS:\n1. Supabase setup (30 min)\n2. Group selection screens (3 hrs)\n3. Group chat with voice (4 hrs)\n4. Homepage real data connection (2 hrs)\n\nTotal remaining: ~10 hours to Phase 1 MVP\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

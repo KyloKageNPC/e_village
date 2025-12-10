@@ -148,7 +148,7 @@ class _PopupMenuState extends State<PopupMenu> {
                   Text(
                     'Fill in the details below',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                     ),
                   ),
@@ -254,31 +254,35 @@ class _PopupMenuState extends State<PopupMenu> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black.withOpacity(0.1)),
+                          border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
                         ),
-                        child: Column(
-                          children: [
-                            RadioListTile<InterestType>(
-                              title: Text('Flat Rate'),
-                              subtitle: Text('Same interest throughout', style: TextStyle(fontSize: 12)),
-                              value: InterestType.flat,
-                              groupValue: _selectedInterestType,
-                              activeColor: Colors.orange.shade600,
-                              onChanged: (value) {
-                                setState(() => _selectedInterestType = value!);
-                              },
-                            ),
-                            RadioListTile<InterestType>(
-                              title: Text('Declining Balance'),
-                              subtitle: Text('Interest on remaining balance', style: TextStyle(fontSize: 12)),
-                              value: InterestType.decliningBalance,
-                              groupValue: _selectedInterestType,
-                              activeColor: Colors.orange.shade600,
-                              onChanged: (value) {
-                                setState(() => _selectedInterestType = value!);
-                              },
-                            ),
-                          ],
+                        child: RadioGroup<InterestType>(
+                          groupValue: _selectedInterestType,
+                          onChanged: (InterestType? value) {
+                            if (value != null) {
+                              setState(() => _selectedInterestType = value);
+                            }
+                          },
+                          child: Column(
+                            children: [
+                              ListTile(
+                                title: Text('Flat Rate'),
+                                subtitle: Text('Same interest throughout', style: TextStyle(fontSize: 12)),
+                                leading: Radio<InterestType>(
+                                  value: InterestType.flat,
+                                  activeColor: Colors.orange.shade600,
+                                ),
+                              ),
+                              ListTile(
+                                title: Text('Declining Balance'),
+                                subtitle: Text('Interest on remaining balance', style: TextStyle(fontSize: 12)),
+                                leading: Radio<InterestType>(
+                                  value: InterestType.decliningBalance,
+                                  activeColor: Colors.orange.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(height: 24),
@@ -292,7 +296,7 @@ class _PopupMenuState extends State<PopupMenu> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                side: BorderSide(color: Colors.black.withOpacity(0.2)),
+                                side: BorderSide(color: Colors.black.withValues(alpha: 0.2)),
                               ),
                               child: Text(
                                 'Cancel',
@@ -356,7 +360,7 @@ class _PopupMenuState extends State<PopupMenu> {
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withValues(alpha: 0.8),
         ),
       ),
     );
@@ -370,11 +374,11 @@ class _PopupMenuState extends State<PopupMenu> {
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.1)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.1)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

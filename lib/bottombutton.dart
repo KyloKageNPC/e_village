@@ -15,19 +15,19 @@ class MyBottomButton extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             color,
-            color.withOpacity(0.8),
+            color.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             offset: Offset(0, 4),
             blurRadius: 12,
             spreadRadius: 1,
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             offset: Offset(-2, -2),
             blurRadius: 8,
             spreadRadius: 1,

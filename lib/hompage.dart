@@ -7,7 +7,13 @@ import 'package:provider/provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
+import 'providers/savings_provider.dart';
 import 'screens/group_selection_screen.dart';
+import 'screens/make_contribution_screen.dart';
+import 'screens/loan_approvals_screen.dart';
+import 'screens/meetings_list_screen.dart';
+import 'screens/group_chat_screen.dart';
+import 'screens/guarantor_requests_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -28,12 +34,22 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadData() async {
     final authProvider = context.read<AuthProvider>();
     final transactionProvider = context.read<TransactionProvider>();
+    final groupProvider = context.read<GroupProvider>();
+    final savingsProvider = context.read<SavingsProvider>();
 
     if (authProvider.currentUser != null) {
       await transactionProvider.loadUserTransactions(
         userId: authProvider.currentUser!.id,
         limit: 50,
       );
+
+      // Load savings account if group is selected
+      if (groupProvider.selectedGroup != null) {
+        await savingsProvider.loadSavingsAccount(
+          groupId: groupProvider.selectedGroup!.id,
+          userId: authProvider.currentUser!.id,
+        );
+      }
     }
   }
 
@@ -118,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: Offset(0, 2),
                         ),
@@ -143,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               Text(
                                 '${groupProvider.groupMembers.length} members',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 12,
                                 ),
                               ),
@@ -162,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Container(
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -194,13 +210,181 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      return Text(
-                        authProvider.userProfile?.fullName ?? 'User',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black.withOpacity(0.6),
-                        ),
+                      return Consumer<GroupProvider>(
+                        builder: (context, groupProvider, _) {
+                          return Row(
+                            children: [
+                              Text(
+                                authProvider.userProfile?.fullName ?? 'User',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => GuarantorRequestsScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.verified_user,
+                                        size: 14,
+                                        color: Colors.purple.shade700,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Guarantor',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.purple.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (groupProvider.canApproveLoans) ...[
+                                SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => LoanApprovalsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.approval,
+                                          size: 14,
+                                          color: Colors.red.shade700,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Approvals',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (groupProvider.selectedGroup != null) ...[
+                                SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MeetingsListScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.event,
+                                          size: 14,
+                                          color: Colors.blue.shade700,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Meetings',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupChatScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.chat,
+                                          size: 14,
+                                          color: Colors.green.shade700,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Chat',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
                       );
                     },
                   ),
@@ -245,7 +429,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               transProvider.errorMessage!,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -292,7 +476,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             'Start by creating your first transaction',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                             ),
                           ),
                         ],
@@ -322,12 +506,22 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 30.0),
-                  child: MyBottomButton(
-                    color: Colors.orange.shade600,
-                    size: Size(60, 50),
-                    icon: Icon(Icons.upload),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MakeContributionScreen(),
+                      ),
+                    ).then((_) => _loadData());
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 30.0),
+                    child: MyBottomButton(
+                      color: Colors.green.shade600,
+                      size: Size(60, 50),
+                      icon: Icon(Icons.savings),
+                    ),
                   ),
                 ),
                 Spacer(),
