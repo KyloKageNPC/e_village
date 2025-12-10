@@ -8,6 +8,7 @@ class VillageGroup {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isActive;
+  final int? memberCount;
 
   VillageGroup({
     required this.id,
@@ -19,6 +20,7 @@ class VillageGroup {
     required this.createdAt,
     required this.updatedAt,
     this.isActive = true,
+    this.memberCount,
   });
 
   factory VillageGroup.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class VillageGroup {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       isActive: json['is_active'] as bool? ?? true,
+      memberCount: json['member_count'] as int?,
     );
   }
 
@@ -46,6 +49,7 @@ class VillageGroup {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'is_active': isActive,
+      'member_count': memberCount,
     };
   }
 
@@ -59,6 +63,7 @@ class VillageGroup {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    int? memberCount,
   }) {
     return VillageGroup(
       id: id ?? this.id,
@@ -70,6 +75,7 @@ class VillageGroup {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      memberCount: memberCount ?? this.memberCount,
     );
   }
 }

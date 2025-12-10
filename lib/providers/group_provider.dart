@@ -78,6 +78,89 @@ class GroupProvider with ChangeNotifier {
     }
   }
 
+  // Load all groups user is a member of
+  Future<List<VillageGroup>> loadUserGroups({required String userId}) async {
+    try {
+      final groups = await _groupService.getUserGroups(userId: userId);
+      _userGroups.clear();
+      _userGroups.addAll(groups);
+      notifyListeners();
+      return groups;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return [];
+    }
+  }
+
+  // Load all available groups
+  Future<List<VillageGroup>> loadAllGroups() async {
+    try {
+      final groups = await _groupService.getAllGroups();
+      _allGroups.clear();
+      _allGroups.addAll(groups);
+      notifyListeners();
+      return groups;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return [];
+    }
+  }
+
+  // Create a new group
+  Future<VillageGroup?> createGroup({
+    required String name,
+    String? description,
+    String? location,
+    String? meetingSchedule,
+    required String createdBy,
+  }) async {
+    try {
+      final group = await _groupService.createGroup(
+        name: name,
+        description: description,
+        location: location,
+        meetingSchedule: meetingSchedule,
+        createdBy: createdBy,
+      );
+
+      // Add creator as chairperson
+      await _groupService.addMemberToGroup(
+        groupId: group.id,
+        userId: createdBy,
+        role: MemberRole.chairperson,
+      );
+
+      notifyListeners();
+      return group;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  // Join a group
+  Future<bool> joinGroup({
+    required String groupId,
+    required String userId,
+  }) async {
+    try {
+      await _groupService.addMemberToGroup(
+        groupId: groupId,
+        userId: userId,
+        role: MemberRole.member,
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();
