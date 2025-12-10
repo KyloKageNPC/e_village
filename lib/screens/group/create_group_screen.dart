@@ -272,6 +272,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         );
         Navigator.of(context).pop(true);
       } else {
+        // This shouldn't happen anymore since we're rethrowing
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to create group. Please try again.'),
@@ -281,10 +282,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      
+      // Extract the actual error message
+      String errorMessage = e.toString();
+      
+      // Try to extract more specific error from Supabase
+      if (errorMessage.contains('PostgrestException')) {
+        // Extract the actual message
+        final match = RegExp(r'message: (.+?)(?:,|})').firstMatch(errorMessage);
+        if (match != null) {
+          errorMessage = match.group(1) ?? errorMessage;
+        }
+      }
+      
+      debugPrint('❌ FULL ERROR: $e'); // This will print to console
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Error: $errorMessage'),
           backgroundColor: Colors.red.shade600,
+          duration: Duration(seconds: 5),
         ),
       );
     } finally {

@@ -87,7 +87,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: Offset(0, 4),
                           ),
@@ -118,14 +118,14 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                                 Icon(
                                   Icons.location_on,
                                   size: 16,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
                                   widget.group.location!,
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],
@@ -145,7 +145,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: Offset(0, 4),
                             ),
@@ -187,7 +187,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: Offset(0, 4),
                             ),
@@ -274,7 +274,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: Offset(0, 4),
                           ),
@@ -299,7 +299,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                                 child: Text(
                                   'No members yet',
                                   style: TextStyle(
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Colors.black.withValues(alpha: 0.5),
                                   ),
                                 ),
                               ),
@@ -328,7 +328,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -400,7 +400,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: _getRoleColor(member.role).withOpacity(0.2),
+                        color: _getRoleColor(member.role).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

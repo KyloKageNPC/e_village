@@ -8,11 +8,11 @@ import 'providers/transaction_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
 import 'providers/savings_provider.dart';
-import 'screens/group_selection_screen.dart';
+import 'screens/group/group_selection_screen.dart';
 import 'screens/make_contribution_screen.dart';
 import 'screens/loan_approvals_screen.dart';
 import 'screens/meetings_list_screen.dart';
-import 'screens/group_chat_screen.dart';
+import 'screens/group/group_chat_screen.dart';
 import 'screens/guarantor_requests_screen.dart';
 
 class MyHomePage extends StatefulWidget {

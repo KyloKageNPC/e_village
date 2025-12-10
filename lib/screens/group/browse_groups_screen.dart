@@ -298,6 +298,11 @@ class _BrowseGroupsScreenState extends State<BrowseGroupsScreen> {
       return;
     }
 
+    // Capture context, navigator, and providers before async gaps
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final groupProvider = context.read<GroupProvider>();
+
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
@@ -327,7 +332,6 @@ class _BrowseGroupsScreenState extends State<BrowseGroupsScreen> {
     if (confirmed != true) return;
 
     try {
-      final groupProvider = context.read<GroupProvider>();
       final success = await groupProvider.joinGroup(
         groupId: group.id,
         userId: authProvider.currentUser!.id,
@@ -336,15 +340,15 @@ class _BrowseGroupsScreenState extends State<BrowseGroupsScreen> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Successfully joined "${group.name}"!'),
             backgroundColor: Colors.green.shade600,
           ),
         );
-        Navigator.of(context).pop(true);
+        navigator.pop(true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Failed to join group. Please try again.'),
             backgroundColor: Colors.red.shade600,
@@ -353,7 +357,7 @@ class _BrowseGroupsScreenState extends State<BrowseGroupsScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
           backgroundColor: Colors.red.shade600,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/village_group.dart';
 import '../models/group_member.dart';
@@ -15,6 +16,10 @@ class GroupService {
     required String createdBy,
   }) async {
     try {
+      debugPrint('🔵 GroupService: Creating group with data:');
+      debugPrint('  Name: $name');
+      debugPrint('  Created by: $createdBy');
+      
       final response = await _client.from('village_groups').insert({
         'name': name,
         'description': description,
@@ -23,8 +28,11 @@ class GroupService {
         'created_by': createdBy,
       }).select().single();
 
+      debugPrint('✅ GroupService: Group created successfully');
       return VillageGroup.fromJson(response);
     } catch (e) {
+      debugPrint('❌ GroupService ERROR: $e');
+      debugPrint('Error type: ${e.runtimeType}');
       rethrow;
     }
   }

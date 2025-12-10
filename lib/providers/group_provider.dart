@@ -117,6 +117,8 @@ class GroupProvider with ChangeNotifier {
     required String createdBy,
   }) async {
     try {
+      debugPrint('🔵 Creating group: $name by user: $createdBy');
+      
       final group = await _groupService.createGroup(
         name: name,
         description: description,
@@ -125,19 +127,25 @@ class GroupProvider with ChangeNotifier {
         createdBy: createdBy,
       );
 
+      debugPrint('✅ Group created successfully: ${group.id}');
+
       // Add creator as chairperson
+      debugPrint('🔵 Adding creator as chairperson...');
       await _groupService.addMemberToGroup(
         groupId: group.id,
         userId: createdBy,
         role: MemberRole.chairperson,
       );
 
+      debugPrint('✅ Creator added as chairperson');
       notifyListeners();
       return group;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error creating group: $e');
+      debugPrint('Stack trace: $stackTrace');
       _errorMessage = e.toString();
       notifyListeners();
-      return null;
+      rethrow; // Re-throw to let the UI handle it
     }
   }
 
