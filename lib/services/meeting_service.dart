@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/meeting_model.dart';
+import '../models/attendance_model.dart';
 import 'supabase_service.dart';
 
 class MeetingService {
@@ -177,6 +178,148 @@ class MeetingService {
       return meetings.length;
     } catch (e) {
       return 0;
+    }
+  }
+
+  // ==================== ATTENDANCE METHODS ====================
+
+  // Mark attendance for a member
+  Future<AttendanceModel> markAttendance({
+    required String meetingId,
+    required String memberId,
+    required String memberName,
+    required AttendanceStatus status,
+    String? notes,
+  }) async {
+    try {
+      final response = await _client.from('meeting_attendance').insert({
+        'meeting_id': meetingId,
+        'member_id': memberId,
+        'member_name': memberName,
+        'status': status.value,
+        'check_in_time': status == AttendanceStatus.present || status == AttendanceStatus.late
+            ? DateTime.now().toIso8601String()
+            : null,
+        'notes': notes,
+      }).select().single();
+
+      return AttendanceModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Update attendance status
+  Future<AttendanceModel> updateAttendance({
+    required String attendanceId,
+    required AttendanceStatus status,
+    String? notes,
+  }) async {
+    try {
+      final Map<String, dynamic> updates = {
+        'status': status.value,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (status == AttendanceStatus.present || status == AttendanceStatus.late) {
+        updates['check_in_time'] = DateTime.now().toIso8601String();
+      }
+
+      if (notes != null) {
+        updates['notes'] = notes;
+      }
+
+      final response = await _client
+          .from('meeting_attendance')
+          .update(updates)
+          .eq('id', attendanceId)
+          .select()
+          .single();
+
+      return AttendanceModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get attendance for a meeting
+  Future<List<AttendanceModel>> getMeetingAttendance({
+    required String meetingId,
+  }) async {
+    try {
+      final response = await _client
+          .from('meeting_attendance')
+          .select()
+          .eq('meeting_id', meetingId)
+          .order('member_name', ascending: true);
+
+      return (response as List)
+          .map((json) => AttendanceModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get member's attendance history
+  Future<List<AttendanceModel>> getMemberAttendance({
+    required String memberId,
+    String? groupId,
+  }) async {
+    try {
+      dynamic query = _client
+          .from('meeting_attendance')
+          .select('*, meetings!inner(*)')
+          .eq('member_id', memberId);
+
+      if (groupId != null) {
+        query = query.eq('meetings.group_id', groupId);
+      }
+
+      final response = await query.order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => AttendanceModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Delete attendance record
+  Future<void> deleteAttendance(String attendanceId) async {
+    try {
+      await _client
+          .from('meeting_attendance')
+          .delete()
+          .eq('id', attendanceId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get attendance statistics
+  Future<Map<String, int>> getAttendanceStats({
+    required String meetingId,
+  }) async {
+    try {
+      final attendance = await getMeetingAttendance(meetingId: meetingId);
+
+      return {
+        'total': attendance.length,
+        'present': attendance.where((a) => a.isPresent).length,
+        'absent': attendance.where((a) => a.isAbsent).length,
+        'late': attendance.where((a) => a.isLate).length,
+        'excused': attendance.where((a) => a.isExcused).length,
+      };
+    } catch (e) {
+      return {
+        'total': 0,
+        'present': 0,
+        'absent': 0,
+        'late': 0,
+        'excused': 0,
+      };
     }
   }
 }

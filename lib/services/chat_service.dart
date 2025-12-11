@@ -14,6 +14,11 @@ class ChatService {
     MessageType type = MessageType.text,
   }) async {
     try {
+      print('🔵 Sending message to chat_messages table...');
+      print('   Group ID: $groupId');
+      print('   Sender ID: $senderId');
+      print('   Sender Name: $senderName');
+
       final response = await _client.from('chat_messages').insert({
         'group_id': groupId,
         'sender_id': senderId,
@@ -22,8 +27,11 @@ class ChatService {
         'type': type.value,
       }).select().single();
 
+      print('✅ Message sent successfully!');
       return ChatMessageModel.fromJson(response);
     } catch (e) {
+      print('❌ DATABASE ERROR: $e');
+      print('Error type: ${e.runtimeType}');
       rethrow;
     }
   }

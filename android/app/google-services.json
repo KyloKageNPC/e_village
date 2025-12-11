@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1001975547766",
+    "project_id": "e-village-964c7",
+    "storage_bucket": "e-village-964c7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001975547766:android:e4a37bd3ed587f201e9c57",
+        "android_client_info": {
+          "package_name": "com.example.e_village"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgOH6CaNNTQB2XWt_r7aZHlNRLSa5-gOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -60,6 +60,8 @@ class ChatProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = e.toString();
+      print('❌ CHAT SEND ERROR: $e');
+      print('Error details: ${e.runtimeType}');
       notifyListeners();
       return false;
     }
