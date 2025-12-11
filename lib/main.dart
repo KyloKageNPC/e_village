@@ -14,6 +14,9 @@ import 'providers/meeting_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/guarantor_provider.dart';
 import 'providers/repayment_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/offline_provider.dart';
+import 'utils/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +43,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => GuarantorProvider()),
         ChangeNotifierProvider(create: (_) => RepaymentProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) => OfflineProvider()..initialize()),
       ],
       child: Consumer2<AuthProvider, GroupProvider>(
         builder: (context, authProvider, groupProvider, _) {
@@ -66,6 +71,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
             ),
             home: home,
+            onGenerateRoute: AppRoutes.generateRoute,
           );
         },
       ),

@@ -53,6 +53,10 @@ CREATE POLICY "Anyone can view active village groups"
   ON village_groups FOR SELECT
   USING (is_active = true);
 
+CREATE POLICY "Authenticated users can create village groups"
+  ON village_groups FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
 CREATE POLICY "Creators can update their village groups"
   ON village_groups FOR UPDATE
   USING (auth.uid() = created_by);
@@ -76,12 +80,21 @@ CREATE TABLE group_members (
 ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 
 -- Group members policies
-CREATE POLICY "Group members can view their group membership"
+CREATE POLICY "Members can view their own membership"
   ON group_members FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Members can insert themselves into groups"
+  ON group_members FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Group admins can manage members"
+  ON group_members FOR ALL
   USING (
-    auth.uid() = user_id OR
-    auth.uid() IN (
-      SELECT user_id FROM group_members WHERE group_id = group_members.group_id
+    EXISTS (
+      SELECT 1 FROM village_groups
+      WHERE id = group_members.group_id
+      AND created_by = auth.uid()
     )
   );
 
@@ -104,6 +117,14 @@ ALTER TABLE savings_accounts ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own savings accounts"
   ON savings_accounts FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own savings accounts"
+  ON savings_accounts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "System can update savings accounts"
+  ON savings_accounts FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- =============================================
@@ -131,13 +152,22 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own transactions"
   ON transactions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Treasurers can view group transactions"
+  ON transactions FOR SELECT
   USING (
-    auth.uid() = user_id OR
-    auth.uid() IN (
-      SELECT user_id FROM group_members
-      WHERE group_id = transactions.group_id AND role IN ('treasurer', 'chairperson')
+    EXISTS (
+      SELECT 1 FROM group_members
+      WHERE group_id = transactions.group_id
+      AND user_id = auth.uid()
+      AND role IN ('treasurer', 'chairperson')
     )
   );
+
+CREATE POLICY "Users can create their own transactions"
+  ON transactions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- =============================================
 -- LOANS TABLE
@@ -170,11 +200,15 @@ ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own loans"
   ON loans FOR SELECT
+  USING (auth.uid() = borrower_id);
+
+CREATE POLICY "Group members can view group loans"
+  ON loans FOR SELECT
   USING (
-    auth.uid() = borrower_id OR
-    auth.uid() IN (
-      SELECT user_id FROM group_members
+    EXISTS (
+      SELECT 1 FROM group_members
       WHERE group_id = loans.group_id
+      AND user_id = auth.uid()
     )
   );
 
@@ -256,8 +290,21 @@ ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Group members can view meetings"
   ON meetings FOR SELECT
   USING (
-    auth.uid() IN (
-      SELECT user_id FROM group_members WHERE group_id = meetings.group_id
+    EXISTS (
+      SELECT 1 FROM group_members
+      WHERE group_id = meetings.group_id
+      AND user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Group admins can create meetings"
+  ON meetings FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM group_members
+      WHERE group_id = meetings.group_id
+      AND user_id = auth.uid()
+      AND role IN ('treasurer', 'chairperson', 'secretary')
     )
   );
 

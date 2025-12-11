@@ -14,6 +14,8 @@ import 'screens/loan_approvals_screen.dart';
 import 'screens/meetings_list_screen.dart';
 import 'screens/group/group_chat_screen.dart';
 import 'screens/guarantor_requests_screen.dart';
+import 'widgets/app_drawer.dart';
+import 'widgets/offline_indicator.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -61,11 +63,26 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.orange.shade100,
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        backgroundColor: Colors.orange.shade600,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(
+          'E-Village Banking',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
         color: Colors.orange.shade600,
         child: Column(
           children: [
+            OfflineIndicator(),
             Consumer<TransactionProvider>(
               builder: (context, transProvider, _) {
                 return TopNueCard(
