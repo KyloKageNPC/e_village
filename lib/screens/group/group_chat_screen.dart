@@ -7,6 +7,9 @@ import '../../providers/group_provider.dart';
 import '../../models/chat_message_model.dart';
 import '../../widgets/voice_message_bubble.dart';
 import '../../widgets/voice_recorder_button.dart';
+import '../../widgets/message_reaction_bar.dart';
+import '../../widgets/poll_creator.dart';
+import '../../widgets/poll_message_widget.dart';
 
 class GroupChatScreen extends StatefulWidget {
   const GroupChatScreen({super.key});
@@ -103,6 +106,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         backgroundColor: Colors.orange.shade600,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.poll, color: Colors.white),
+            onPressed: _showPollCreator,
+            tooltip: 'Create Poll',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -239,6 +249,20 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Widget _buildMessageBubble(ChatMessageModel message, bool isMe) {
     final dateFormat = DateFormat('h:mm a');
+    final chatProvider = context.watch<ChatProvider>();
+    final authProvider = context.watch<AuthProvider>();
+
+    // Check if this message is a poll
+    if (message.type == MessageType.system) {
+      final poll = chatProvider.getPollForMessage(message.id);
+      if (poll != null && authProvider.currentUser != null) {
+        return PollMessageWidget(
+          poll: poll,
+          currentUserId: authProvider.currentUser!.id,
+          onVote: (optionId) => _handlePollVote(message.id, optionId),
+        );
+      }
+    }
 
     if (message.type == MessageType.voice) {
       return Align(
@@ -273,50 +297,179 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                 ),
               ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isMe ? Colors.orange.shade600 : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(isMe ? 20 : 4),
-                  topRight: Radius.circular(isMe ? 4 : 20),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+            GestureDetector(
+              onLongPress: () => _showReactionPicker(message.id),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isMe ? Colors.orange.shade600 : Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(isMe ? 20 : 4),
+                    topRight: Radius.circular(isMe ? 4 : 20),
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.message,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: isMe ? Colors.white : Colors.black87,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.message,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: isMe ? Colors.white : Colors.black87,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    dateFormat.format(message.createdAt),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isMe
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.black45,
+                    SizedBox(height: 4),
+                    Text(
+                      dateFormat.format(message.createdAt),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMe
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.black45,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ),
+            // Reaction bar
+            Consumer<ChatProvider>(
+              builder: (context, chatProvider, _) {
+                final reactions = chatProvider.getReactionsForMessage(message.id);
+                if (reactions.isEmpty) return SizedBox.shrink();
+
+                return Padding(
+                  padding: EdgeInsets.only(top: 4, left: isMe ? 0 : 12, right: isMe ? 12 : 0),
+                  child: MessageReactionBar(
+                    reactions: reactions,
+                    onReactionTap: (emoji) => _handleReactionTap(message.id, emoji),
+                    onAddReaction: () => _showReactionPicker(message.id),
+                    isMe: isMe,
+                  ),
+                );
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Show reaction picker bottom sheet
+  void _showReactionPicker(String messageId) {
+    final authProvider = context.read<AuthProvider>();
+    final chatProvider = context.read<ChatProvider>();
+
+    if (authProvider.currentUser == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => ReactionPicker(
+        onEmojiSelected: (emoji) async {
+          await chatProvider.toggleReaction(
+            messageId: messageId,
+            userId: authProvider.currentUser!.id,
+            userName: authProvider.userProfile?.fullName ??
+                     authProvider.currentUser!.email ?? 'Unknown',
+            emoji: emoji,
+          );
+        },
+      ),
+    );
+  }
+
+  // Handle reaction tap (toggle reaction)
+  void _handleReactionTap(String messageId, String emoji) {
+    final authProvider = context.read<AuthProvider>();
+    final chatProvider = context.read<ChatProvider>();
+
+    if (authProvider.currentUser == null) return;
+
+    chatProvider.toggleReaction(
+      messageId: messageId,
+      userId: authProvider.currentUser!.id,
+      userName: authProvider.userProfile?.fullName ??
+               authProvider.currentUser!.email ?? 'Unknown',
+      emoji: emoji,
+    );
+  }
+
+  // Show poll creator bottom sheet
+  void _showPollCreator() {
+    final authProvider = context.read<AuthProvider>();
+    final groupProvider = context.read<GroupProvider>();
+    final chatProvider = context.read<ChatProvider>();
+
+    if (authProvider.currentUser == null || groupProvider.selectedGroup == null) {
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) => PollCreator(
+        onCreatePoll: (question, options, endDate, allowMultiple, isAnonymous) async {
+          // Capture ScaffoldMessenger before async operation
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+          final success = await chatProvider.createPoll(
+            groupId: groupProvider.selectedGroup!.id,
+            question: question,
+            options: options,
+            createdBy: authProvider.currentUser!.id,
+            endDate: endDate,
+            allowMultipleVotes: allowMultiple,
+            isAnonymous: isAnonymous,
+          );
+
+          if (success) {
+            _scrollToBottom();
+            if (mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text('Poll created successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text('Failed to create poll'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  // Handle poll vote
+  void _handlePollVote(String messageId, String optionId) {
+    final authProvider = context.read<AuthProvider>();
+    final chatProvider = context.read<ChatProvider>();
+
+    if (authProvider.currentUser == null) return;
+
+    chatProvider.toggleVote(
+      messageId: messageId,
+      optionId: optionId,
+      userId: authProvider.currentUser!.id,
+      userName: authProvider.userProfile?.fullName ??
+               authProvider.currentUser!.email ?? 'Unknown',
     );
   }
 

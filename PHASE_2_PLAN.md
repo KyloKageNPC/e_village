@@ -112,53 +112,84 @@ dependencies:
 
 #### 2. Reports & Analytics Dashboard (12-15 hours)
 
-**Purpose**: Provide financial insights and group performance metrics
+**Purpose**: Provide financial insights and group performance metrics using existing services and models.
 
-**Screens to Create:**
+Summary: The codebase already includes a complete analytics backend: `lib/services/analytics_service.dart`, `lib/providers/analytics_provider.dart`, and model classes in `lib/models/` (`financial_report_model.dart`, `member_analytics_model.dart`, `group_performance_model.dart`). These services query Supabase tables such as `transactions`, `loans`, `meetings`, `meeting_attendance`, `profiles`, `group_members`, and `village_groups`.
 
-**A. Financial Reports Screen** (5 hours)
-- Group financial summary
-- Income vs Expenses chart
-- Contribution trends
-- Loan portfolio overview
-- Member contribution leaderboard
+What to implement (concrete):
+- Add three report screens under `lib/screens/reports/`:
+  - `financial_report_screen.dart` — uses `AnalyticsProvider.loadFinancialReport()` and renders: total contributions, income/expenses, contribution trends (monthly), top contributors, loan portfolio summary.
+  - `member_analytics_screen.dart` — uses `AnalyticsProvider.loadMemberAnalytics()` and renders: contribution history chart, loan repayment timeline, attendance rate, participation score.
+  - `group_performance_screen.dart` — uses `AnalyticsProvider.loadGroupPerformance()` and renders: contributions over time, attendance trends, active/inactive breakdown, loan default rate, group health score.
 
-**B. Member Analytics Screen** (4 hours)
-- Individual member performance
-- Contribution history chart
-- Loan repayment status
-- Attendance record
-- Active participation score
+Implementation steps & examples (12-15 hours total):
+1. Wire provider to app (0.5h): ensure `AnalyticsProvider` is added where others are registered (e.g., `main.dart` or top-level `MultiProvider`).
 
-**C. Group Performance Screen** (3 hours)
-- Total contributions over time
-- Active vs inactive members
-- Meeting attendance trends
-- Loan default rate
-- Group health score
+2. Create `financial_report_screen.dart` (3.5h):
+  - Call `context.read<AnalyticsProvider>().loadFinancialReport(groupId: gid, startDate: s, endDate: e)` on init or when filters change.
+  - Render cards for `financialReport.totalContributions`, `totalLoans`, `netIncome`, `outstandingLoans`.
+  - Render a monthly line/bar chart using `fl_chart` from `financialReport.contributionTrends`.
 
-**Implementation:**
-```dart
-// Create: screens/reports/financial_report_screen.dart
-// Create: screens/reports/member_analytics_screen.dart
-// Create: screens/reports/group_performance_screen.dart
-// Create: services/analytics_service.dart
-// Create: providers/analytics_provider.dart
-```
+  Example snippet:
+  ```dart
+  // inside initState or didChangeDependencies
+  analyticsProvider.loadFinancialReport(groupId: group.id);
 
-**Charts Library:**
+  // accessing data in build
+  final report = analyticsProvider.financialReport;
+  Text('Contributions: \\$${report?.totalContributions ?? 0}');
+  ```
+
+3. Create `member_analytics_screen.dart` (2.5h):
+  - Use `loadMemberAnalytics(memberId: ..., groupId: ...)` and show contribution history list and a small chart. Include attendanceRate and participationScore.
+
+4. Create `group_performance_screen.dart` (2h):
+  - Use `loadGroupPerformance(groupId: ...)` and render contribution timeline, attendance trends, member activity pie/bars, and health score.
+
+5. Charts & UI polish (1.5h):
+  - Add `fl_chart` to `pubspec.yaml` and build compact, responsive charts. Prefer line charts for trends and bar/pie for distributions.
+
+6. Export / PDF placeholders (1h):
+  - Add export buttons that call a `ReportExporter` (stub) which will use `pdf` + `printing` packages later. Initially generate a simple PDF header and key metrics.
+
+7. Tests & docs (1h):
+  - Add `test/services/analytics_service_test.dart` with mocked Supabase responses (or test provider state transitions). Document usage in `PHASE_2_PLAN.md` and link to `supabase_schema.sql` for required tables.
+
+Files to create/modify:
+- Add: `lib/screens/reports/financial_report_screen.dart`
+- Add: `lib/screens/reports/member_analytics_screen.dart`
+- Add: `lib/screens/reports/group_performance_screen.dart`
+- Modify (if needed): `lib/main.dart` to add navigation routes or drawer links to the reports screens
+- Add: `test/services/analytics_service_test.dart` (unit tests)
+
+Key design notes & data sources (do not change):
+- `AnalyticsService` queries these tables: `transactions`, `loans`, `meetings`, `meeting_attendance`, `profiles`, `group_members`, `village_groups` — confirm these exist in `supabase_schema.sql` before running reports.
+- Provider methods: `loadFinancialReport`, `loadMemberAnalytics`, `loadGroupPerformance` handle loading/error states — UI should read `isLoading*` and `errorMessage`.
+
+Charts / packages:
 ```yaml
 dependencies:
-  fl_chart: ^0.65.0  # Beautiful charts
+  fl_chart: ^0.65.0
+  pdf: ^3.10.0   # for PDF export placeholders
+  printing: ^5.11.0
 ```
 
-**Key Metrics:**
-- Total contributions this month
-- Total loans disbursed
-- Average loan size
-- Repayment rate percentage
-- Member participation rate
-- Meeting attendance rate
+Quick UI usage example (inside a screen):
+```dart
+final analytics = context.watch<AnalyticsProvider>();
+if (analytics.isLoadingFinancial) return CircularProgressIndicator();
+final report = analytics.financialReport;
+// show report cards and charts
+```
+
+Testing recommendation:
+- Write unit tests that mock `SupabaseService.client` responses to validate calculation paths in `AnalyticsService` (contribution grouping, repayment rate, attendance rate).
+
+Acceptance criteria:
+- Screens render without runtime errors when provider returns data.
+- Charts are responsive and display correct series from `contributionTrends` and `contributionsOverTime`.
+- Export button creates a simple PDF with title and key metrics.
+
 
 ---
 

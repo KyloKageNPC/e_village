@@ -42,6 +42,53 @@ class PollModel {
     );
   }
 
+  // Create a PollModel with votes from database
+  static PollModel fromJsonWithVotes(
+    Map<String, dynamic> json,
+    List<Map<String, dynamic>> voteRecords,
+  ) {
+    // Group votes by option_id
+    final Map<String, List<PollVote>> votesByOption = {};
+    for (var voteRecord in voteRecords) {
+      final optionId = voteRecord['option_id'] as String;
+      final vote = PollVote(
+        userId: voteRecord['user_id'] as String,
+        userName: voteRecord['user_name'] as String,
+        votedAt: DateTime.parse(voteRecord['voted_at'] as String),
+      );
+
+      if (!votesByOption.containsKey(optionId)) {
+        votesByOption[optionId] = [];
+      }
+      votesByOption[optionId]!.add(vote);
+    }
+
+    // Create options with their votes
+    final options = (json['options'] as List).map((o) {
+      final optionId = o['id'] as String;
+      return PollOption(
+        id: optionId,
+        text: o['text'] as String,
+        votes: votesByOption[optionId] ?? [],
+      );
+    }).toList();
+
+    return PollModel(
+      id: json['id'] as String,
+      messageId: json['message_id'] as String,
+      groupId: json['group_id'] as String,
+      question: json['question'] as String,
+      options: options,
+      endDate: json['end_date'] != null
+          ? DateTime.parse(json['end_date'] as String)
+          : null,
+      allowMultipleVotes: json['allow_multiple_votes'] as bool? ?? false,
+      isAnonymous: json['is_anonymous'] as bool? ?? false,
+      createdBy: json['created_by'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

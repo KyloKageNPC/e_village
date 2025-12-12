@@ -214,8 +214,8 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Recent Transactions',
@@ -225,21 +225,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: Colors.black,
                     ),
                   ),
+                  SizedBox(height: 8),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
                       return Consumer<GroupProvider>(
                         builder: (context, groupProvider, _) {
-                          return Row(
+                          return Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
                             children: [
-                              Text(
-                                authProvider.userProfile?.fullName ?? 'User',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black.withValues(alpha: 0.6),
-                                ),
-                              ),
-                              SizedBox(width: 8),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.push(
@@ -259,6 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Icons.verified_user,
@@ -278,8 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ),
                               ),
-                              if (groupProvider.canApproveLoans) ...[
-                                SizedBox(width: 8),
+                              if (groupProvider.canApproveLoans)
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -299,6 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.approval,
@@ -318,9 +313,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                   ),
                                 ),
-                              ],
                               if (groupProvider.selectedGroup != null) ...[
-                                SizedBox(width: 8),
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -340,6 +333,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.event,
@@ -359,7 +353,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 8),
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -379,6 +372,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.chat,

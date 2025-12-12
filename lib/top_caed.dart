@@ -13,7 +13,7 @@ class TopNueCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
-          height: 220,
+          height: 270,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24.0),
             gradient: LinearGradient(
