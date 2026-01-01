@@ -95,20 +95,7 @@ class _MeetingDetailsScreenState extends State<MeetingDetailsScreen>
     }
   }
 
-  Future<void> _markAttendance(String memberId, String memberName, AttendanceStatus status) async {
-    try {
-      await _meetingService.markAttendance(
-        meetingId: widget.meeting.id,
-        memberId: memberId,
-        memberName: memberName,
-        status: status,
-      );
-      await _loadAttendance();
-      _showMessage('Attendance marked', isError: false);
-    } catch (e) {
-      _showMessage('Error marking attendance: $e', isError: true);
-    }
-  }
+  // Attendance marking is handled via MeetingService directly where needed.
 
   void _showMessage(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -4,6 +4,8 @@ import 'package:e_village/screens/complete_profile_screen.dart';
 import 'package:e_village/screens/group/group_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/transaction_provider.dart';
@@ -16,10 +18,16 @@ import 'providers/guarantor_provider.dart';
 import 'providers/repayment_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/offline_provider.dart';
+import 'providers/analytics_provider.dart';
 import 'utils/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Initialize Supabase
   await SupabaseService.initialize();
@@ -37,14 +45,27 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => LoanProvider()),
-        ChangeNotifierProvider(create: (_) => GroupProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) {
+          final provider = GroupProvider();
+          provider.initialize();
+          return provider;
+        }),
         ChangeNotifierProvider(create: (_) => SavingsProvider()),
         ChangeNotifierProvider(create: (_) => MeetingProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => GuarantorProvider()),
         ChangeNotifierProvider(create: (_) => RepaymentProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()..initialize()),
-        ChangeNotifierProvider(create: (_) => OfflineProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) {
+          final provider = NotificationProvider();
+          provider.initialize();
+          return provider;
+        }),
+        ChangeNotifierProvider(create: (_) {
+          final provider = OfflineProvider();
+          provider.initialize();
+          return provider;
+        }),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
       ],
       child: Consumer2<AuthProvider, GroupProvider>(
         builder: (context, authProvider, groupProvider, _) {

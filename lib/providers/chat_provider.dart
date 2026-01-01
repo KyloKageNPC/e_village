@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message_model.dart';
@@ -70,8 +71,8 @@ class ChatProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = e.toString();
-      print('❌ CHAT SEND ERROR: $e');
-      print('Error details: ${e.runtimeType}');
+      developer.log('❌ CHAT SEND ERROR: $e', error: e, name: 'ChatProvider');
+      developer.log('Error details: ${e.runtimeType}', name: 'ChatProvider');
       notifyListeners();
       return false;
     }
@@ -170,8 +171,8 @@ class ChatProvider with ChangeNotifier {
       final messageIds = _messages.map((m) => m.id).toList();
       _reactions = await _chatService.getReactionsForMessages(messageIds: messageIds);
       notifyListeners();
-    } catch (e) {
-      print('❌ Error loading reactions: $e');
+    } catch (e, st) {
+      developer.log('❌ Error loading reactions: $e', error: e, stackTrace: st, name: 'ChatProvider');
     }
   }
 
@@ -206,8 +207,8 @@ class ChatProvider with ChangeNotifier {
       }
 
       return true;
-    } catch (e) {
-      print('❌ Error adding reaction: $e');
+    } catch (e, st) {
+      developer.log('❌ Error adding reaction: $e', error: e, stackTrace: st, name: 'ChatProvider');
       _errorMessage = e.toString();
       notifyListeners();
       return false;
@@ -236,8 +237,8 @@ class ChatProvider with ChangeNotifier {
       }
 
       return true;
-    } catch (e) {
-      print('❌ Error removing reaction: $e');
+    } catch (e, st) {
+      developer.log('❌ Error removing reaction: $e', error: e, stackTrace: st, name: 'ChatProvider');
       _errorMessage = e.toString();
       notifyListeners();
       return false;
@@ -287,8 +288,8 @@ class ChatProvider with ChangeNotifier {
     try {
       _polls = await _chatService.getGroupPolls(groupId);
       notifyListeners();
-    } catch (e) {
-      print('❌ Error loading polls: $e');
+    } catch (e, st) {
+      developer.log('❌ Error loading polls: $e', error: e, stackTrace: st, name: 'ChatProvider');
     }
   }
 
@@ -321,8 +322,8 @@ class ChatProvider with ChangeNotifier {
       await loadMessages(groupId: groupId);
 
       return true;
-    } catch (e) {
-      print('❌ Error creating poll: $e');
+    } catch (e, st) {
+      developer.log('❌ Error creating poll: $e', error: e, stackTrace: st, name: 'ChatProvider');
       _errorMessage = e.toString();
       notifyListeners();
       return false;
@@ -357,8 +358,8 @@ class ChatProvider with ChangeNotifier {
       }
 
       return success;
-    } catch (e) {
-      print('❌ Error voting on poll: $e');
+    } catch (e, st) {
+      developer.log('❌ Error voting on poll: $e', error: e, stackTrace: st, name: 'ChatProvider');
       _errorMessage = e.toString();
       notifyListeners();
       return false;
@@ -391,8 +392,8 @@ class ChatProvider with ChangeNotifier {
       }
 
       return success;
-    } catch (e) {
-      print('❌ Error removing vote: $e');
+    } catch (e, st) {
+      developer.log('❌ Error removing vote: $e', error: e, stackTrace: st, name: 'ChatProvider');
       _errorMessage = e.toString();
       notifyListeners();
       return false;

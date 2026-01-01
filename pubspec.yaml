@@ -74,6 +74,8 @@ dependencies:
 
   # Charts & Analytics
   fl_chart: ^0.69.0
+  pdf: ^3.10.0
+  printing: ^5.11.0
 
 dev_dependencies:
   flutter_test:

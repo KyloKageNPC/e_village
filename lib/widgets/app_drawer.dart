@@ -89,6 +89,39 @@ class AppDrawer extends StatelessWidget {
                     route: AppRoutes.myLoans,
                   ),
                   Divider(height: 1),
+                  _buildSectionTitle('Analytics'),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.analytics,
+                    title: 'Financial Reports',
+                    route: AppRoutes.financialReport,
+                  ),
+                  // 'My Analytics' needs to pass the current user's id as an argument
+                  Builder(
+                    builder: (ctx) {
+                      final auth = Provider.of<AuthProvider>(ctx, listen: false);
+                      final memberId = auth.userProfile?.id;
+                      return ListTile(
+                        leading: Icon(Icons.person),
+                        title: Text('My Analytics'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          if (memberId != null && memberId.isNotEmpty) {
+                            Navigator.pushNamed(ctx, AppRoutes.memberAnalytics, arguments: memberId);
+                          } else {
+                            Navigator.pushNamed(ctx, AppRoutes.memberAnalytics);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.bar_chart,
+                    title: 'Group Performance',
+                    route: AppRoutes.groupPerformance,
+                  ),
+                  Divider(height: 1),
                   _buildSectionTitle('Group'),
                   _buildDrawerItem(
                     context,

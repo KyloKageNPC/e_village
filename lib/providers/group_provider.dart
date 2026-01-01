@@ -22,7 +22,8 @@ class GroupProvider with ChangeNotifier {
   GroupMember? get currentMembership => _currentMembership;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get hasSelectedGroup => _selectedGroup != null;
+  // Consider both currently selected and saved group when determining if user has a group
+  bool get hasSelectedGroup => _selectedGroup != null || _savedGroupId != null;
 
   bool get isChairperson => _currentMembership?.role == MemberRole.chairperson;
   bool get isTreasurer => _currentMembership?.role == MemberRole.treasurer;
@@ -31,19 +32,63 @@ class GroupProvider with ChangeNotifier {
   bool get canApproveLoans => _currentMembership?.canApproveLoans ?? false;
   bool get canManageGroup => _currentMembership?.canManageGroup ?? false;
 
+  // Store saved group ID for later restoration
+  String? _savedGroupId;
+  String? get savedGroupId => _savedGroupId;
+
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedGroupId = prefs.getString('selected_group_id');
-
-      if (savedGroupId != null) {
-        final group = await _groupService.getGroupById(savedGroupId);
-        _selectedGroup = group;
-        notifyListeners();
-      }
+      _savedGroupId = prefs.getString('selected_group_id');
+      // Just load the saved group ID, full restoration happens in restoreGroupSelection
     } catch (e) {
       debugPrint('Error initializing GroupProvider: $e');
     }
+  }
+
+  // Call this after user is authenticated to fully restore group selection
+  Future<void> restoreGroupSelection(String userId) async {
+    if (_savedGroupId == null) return;
+    
+    try {
+      final group = await _groupService.getGroupById(_savedGroupId!);
+      if (group != null) {
+        // Verify user is still a member and fully select the group
+        final membership = await _groupService.getMemberRole(
+          groupId: group.id,
+          userId: userId,
+        );
+
+        if (membership != null && membership.status == MemberStatus.active) {
+          _selectedGroup = group;
+          _currentMembership = membership;
+          await loadGroupMembers(groupId: group.id);
+          notifyListeners();
+          debugPrint('✅ Group selection restored: ${group.name}');
+        } else {
+          // User is no longer a member, clear saved selection
+          await clearGroupSelection();
+          debugPrint('⚠️ User is no longer a member of the saved group');
+        }
+      } else {
+        // Group no longer exists
+        await clearGroupSelection();
+      }
+    } catch (e) {
+      debugPrint('Error restoring group selection: $e');
+    }
+  }
+
+  // Clear the saved group selection
+  Future<void> clearGroupSelection() async {
+    _selectedGroup = null;
+    _currentMembership = null;
+    _groupMembers = [];
+    _savedGroupId = null;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('selected_group_id');
+    notifyListeners();
   }
 
   Future<void> selectGroup(VillageGroup group, String userId) async {

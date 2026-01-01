@@ -10,7 +10,7 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  FirebaseMessaging? _firebaseMessaging;
 
   bool _isInitialized = false;
   String? _fcmToken;
@@ -22,12 +22,9 @@ class NotificationService {
     if (_isInitialized) return;
 
     try {
-      // Initialize Firebase (only if not already initialized)
-      try {
-        await Firebase.initializeApp();
-      } catch (e) {
-        debugPrint('Firebase already initialized or error: $e');
-      }
+      // Firebase should already be initialized in main.dart
+      // Initialize FirebaseMessaging instance after Firebase is ready
+      _firebaseMessaging = FirebaseMessaging.instance;
 
       // Initialize local notifications
       await _initializeLocalNotifications();
@@ -65,9 +62,14 @@ class NotificationService {
   }
 
   Future<void> _initializeFirebaseMessaging() async {
+    if (_firebaseMessaging == null) {
+      debugPrint('Firebase Messaging not initialized');
+      return;
+    }
+    
     try {
       // Request permission
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      NotificationSettings settings = await _firebaseMessaging!.requestPermission(
         alert: true,
         badge: true,
         sound: true,
@@ -78,11 +80,11 @@ class NotificationService {
         debugPrint('User granted notification permission');
 
         // Get FCM token
-        _fcmToken = await _firebaseMessaging.getToken();
+        _fcmToken = await _firebaseMessaging!.getToken();
         debugPrint('FCM Token: $_fcmToken');
 
         // Listen to token refresh
-        _firebaseMessaging.onTokenRefresh.listen((token) {
+        _firebaseMessaging!.onTokenRefresh.listen((token) {
           _fcmToken = token;
           debugPrint('FCM Token refreshed: $token');
         });

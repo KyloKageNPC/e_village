@@ -69,6 +69,8 @@ class _PollCreatorState extends State<PollCreator> {
       },
     );
 
+    if (!mounted) return;
+
     if (picked != null) {
       final TimeOfDay? time = await showTimePicker(
         context: context,
@@ -85,6 +87,8 @@ class _PollCreatorState extends State<PollCreator> {
           );
         },
       );
+
+      if (!mounted) return;
 
       if (time != null) {
         setState(() {

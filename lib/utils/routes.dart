@@ -12,6 +12,9 @@ import '../screens/meetings_list_screen.dart';
 import '../screens/guarantor_requests_screen.dart';
 import '../screens/my_loans_screen.dart';
 import '../screens/profile_settings_screen.dart';
+import '../screens/reports/financial_report_screen.dart';
+import '../screens/reports/member_analytics_screen.dart';
+import '../screens/reports/group_performance_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -28,6 +31,9 @@ class AppRoutes {
   static const String guarantorRequests = '/guarantor-requests';
   static const String myLoans = '/my-loans';
   static const String profileSettings = '/profile-settings';
+  static const String financialReport = '/reports/financial';
+  static const String memberAnalytics = '/reports/member';
+  static const String groupPerformance = '/reports/group';
 
   // Route generator
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -58,6 +64,20 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => MyLoansScreen());
       case profileSettings:
         return MaterialPageRoute(builder: (_) => ProfileSettingsScreen());
+      case financialReport:
+        return MaterialPageRoute(builder: (_) => const FinancialReportScreen());
+      case memberAnalytics:
+        final memberId = settings.arguments as String?;
+        if (memberId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              body: Center(child: Text('Member ID required for $memberAnalytics')),
+            ),
+          );
+        }
+        return MaterialPageRoute(builder: (_) => MemberAnalyticsScreen(memberId: memberId));
+      case groupPerformance:
+        return MaterialPageRoute(builder: (_) => const GroupPerformanceScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

@@ -24,8 +24,13 @@ class NotificationProvider with ChangeNotifier {
 
   // Initialize
   Future<void> initialize() async {
-    await _notificationService.initialize();
-    await _loadPreferences();
+    try {
+      await _notificationService.initialize();
+      await _loadPreferences();
+    } catch (e) {
+      debugPrint('Error initializing NotificationProvider: $e');
+      // Don't rethrow - allow the provider to be created with default values
+    }
   }
 
   // Load preferences from storage

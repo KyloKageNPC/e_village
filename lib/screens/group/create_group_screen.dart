@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/group_provider.dart';
+import '../../hompage.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -42,6 +43,16 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         backgroundColor: Colors.orange.shade600,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => MyHomePage()),
+              (route) => false,
+            );
+          },
+          tooltip: 'Back to Home',
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24),

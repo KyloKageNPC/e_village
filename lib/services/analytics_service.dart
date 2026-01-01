@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/financial_report_model.dart';
 import '../models/member_analytics_model.dart';
@@ -21,25 +22,27 @@ class AnalyticsService {
       final end = endDate ?? DateTime.now();
 
       // Fetch all transactions for the period
-      final transactions = await _client
+      final transactionsResp = await _client
           .from('transactions')
           .select()
           .eq('group_id', groupId)
           .gte('created_at', start.toIso8601String())
           .lte('created_at', end.toIso8601String());
+      final transactionsList = (transactionsResp as List<dynamic>).cast<Map<String, dynamic>>();
 
       // Fetch loans for the period
-      final loans = await _client
+      final loansResp = await _client
           .from('loans')
           .select()
           .eq('group_id', groupId)
           .gte('created_at', start.toIso8601String())
           .lte('created_at', end.toIso8601String());
+      final loansList = (loansResp as List<dynamic>).cast<Map<String, dynamic>>();
 
       // Calculate metrics
       double totalContributions = 0;
       double totalExpenses = 0;
-      for (var tx in transactions as List) {
+      for (var tx in transactionsList) {
         final amount = (tx['amount'] as num).toDouble();
         if (tx['type'] == 'contribution' || tx['type'] == 'deposit') {
           totalContributions += amount;
@@ -55,7 +58,7 @@ class AnalyticsService {
       int completedLoans = 0;
       int defaultedLoans = 0;
 
-      for (var loan in loans as List) {
+      for (var loan in loansList) {
         final amount = (loan['amount'] as num).toDouble();
         final repaid = (loan['repaid_amount'] as num?)?.toDouble() ?? 0;
         final status = loan['status'] as String;
@@ -85,11 +88,11 @@ class AnalyticsService {
 
       // Create loan portfolio
       final loanPortfolio = LoanPortfolio(
-        totalLoans: (loans as List).length,
+        totalLoans: loansList.length,
         activeLoans: activeLoans,
         completedLoans: completedLoans,
         defaultedLoans: defaultedLoans,
-        averageLoanSize: (loans as List).isNotEmpty ? totalLoans / (loans as List).length : 0,
+        averageLoanSize: loansList.isNotEmpty ? totalLoans / loansList.length : 0,
         repaymentRate: totalLoans > 0 ? (totalRepayments / totalLoans) * 100 : 0,
       );
 
@@ -107,8 +110,8 @@ class AnalyticsService {
         topContributors: topContributors,
         loanPortfolio: loanPortfolio,
       );
-    } catch (e) {
-      print('❌ Error fetching financial report: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching financial report: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       rethrow;
     }
   }
@@ -119,20 +122,23 @@ class AnalyticsService {
     DateTime end,
   ) async {
     try {
-      final transactions = await _client
+        final transactionsResponse = await _client
           .from('transactions')
           .select()
           .eq('group_id', groupId)
-          .in_('type', ['contribution', 'deposit'])
           .gte('created_at', start.toIso8601String())
           .lte('created_at', end.toIso8601String())
           .order('created_at', ascending: true);
+
+        // Cast once and filter types locally (server-side 'in' helper not available on this SDK version)
+        final transactionsList = (transactionsResponse as List<dynamic>).cast<Map<String, dynamic>>();
+        final transactions = transactionsList.where((tx) => tx['type'] == 'contribution' || tx['type'] == 'deposit').toList();
 
       // Group by month
       final Map<String, double> monthlyTotals = {};
       final Map<String, DateTime> monthDates = {};
 
-      for (var tx in transactions as List) {
+      for (var tx in transactions) {
         final date = DateTime.parse(tx['created_at'] as String);
         final monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
         final amount = (tx['amount'] as num).toDouble();
@@ -148,8 +154,8 @@ class AnalyticsService {
           date: monthDates[entry.key]!,
         );
       }).toList();
-    } catch (e) {
-      print('❌ Error fetching monthly contributions: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching monthly contributions: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       return [];
     }
   }
@@ -160,18 +166,20 @@ class AnalyticsService {
     DateTime end,
   ) async {
     try {
-      final transactions = await _client
+        final transactionsResponse = await _client
           .from('transactions')
           .select('user_id, amount, profiles(full_name)')
           .eq('group_id', groupId)
-          .in_('type', ['contribution', 'deposit'])
           .gte('created_at', start.toIso8601String())
           .lte('created_at', end.toIso8601String());
+
+        final transactionsList = (transactionsResponse as List<dynamic>).cast<Map<String, dynamic>>();
+        final transactions = transactionsList.where((tx) => tx['type'] == 'contribution' || tx['type'] == 'deposit').toList();
 
       // Group by member
       final Map<String, Map<String, dynamic>> memberTotals = {};
 
-      for (var tx in transactions as List) {
+      for (var tx in transactions) {
         final userId = tx['user_id'] as String;
         final amount = (tx['amount'] as num).toDouble();
         final profile = tx['profiles'] as Map<String, dynamic>?;
@@ -202,8 +210,8 @@ class AnalyticsService {
       contributors.sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
       return contributors.take(10).toList();
-    } catch (e) {
-      print('❌ Error fetching top contributors: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching top contributors: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       return [];
     }
   }
@@ -337,8 +345,8 @@ class AnalyticsService {
         contributionHistory: contributionHistory,
         loanHistory: loanHistory,
       );
-    } catch (e) {
-      print('❌ Error fetching member analytics: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching member analytics: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       rethrow;
     }
   }
@@ -410,9 +418,9 @@ class AnalyticsService {
       double averageAttendanceRate = 0;
       if ((meetings as List).isNotEmpty) {
         final attendanceRecords = await _client
-            .from('meeting_attendance')
-            .select('meeting_id, status')
-            .inFilter('meeting_id', (meetings as List).map((m) => m['id']).toList());
+          .from('meeting_attendance')
+          .select('meeting_id, status')
+          .inFilter('meeting_id', (meetings as List).map((m) => m['id']).toList());
 
         final totalAttendance = (attendanceRecords as List)
             .where((a) => a['status'] == 'present')
@@ -449,8 +457,8 @@ class AnalyticsService {
         attendanceTrends: attendanceTrends,
         memberActivity: memberActivity,
       );
-    } catch (e) {
-      print('❌ Error fetching group performance: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching group performance: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       rethrow;
     }
   }
@@ -461,19 +469,21 @@ class AnalyticsService {
     DateTime end,
   ) async {
     try {
-      final transactions = await _client
+        final transactionsResponse = await _client
           .from('transactions')
           .select()
           .eq('group_id', groupId)
-          .in_('type', ['contribution', 'deposit'])
           .gte('created_at', start.toIso8601String())
           .lte('created_at', end.toIso8601String())
           .order('created_at', ascending: true);
 
+        final transactionsList = (transactionsResponse as List<dynamic>).cast<Map<String, dynamic>>();
+        final transactions = transactionsList.where((tx) => tx['type'] == 'contribution' || tx['type'] == 'deposit').toList();
+
       // Group by month
       final Map<String, Map<String, dynamic>> monthlyData = {};
 
-      for (var tx in transactions as List) {
+      for (var tx in transactions) {
         final date = DateTime.parse(tx['created_at'] as String);
         final monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
         final amount = (tx['amount'] as num).toDouble();
@@ -499,8 +509,8 @@ class AnalyticsService {
           date: entry.value['date'] as DateTime,
         );
       }).toList();
-    } catch (e) {
-      print('❌ Error fetching group monthly contributions: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching group monthly contributions: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       return [];
     }
   }
@@ -552,8 +562,8 @@ class AnalyticsService {
       }
 
       return trends;
-    } catch (e) {
-      print('❌ Error fetching attendance trends: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching attendance trends: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       return [];
     }
   }
@@ -605,8 +615,8 @@ class AnalyticsService {
         lowActivity: lowActivity,
         inactive: inactive,
       );
-    } catch (e) {
-      print('❌ Error fetching member activity: $e');
+    } catch (e, st) {
+      developer.log('❌ Error fetching member activity: $e', error: e, stackTrace: st, name: 'AnalyticsService');
       return MemberActivity(
         highlyActive: 0,
         moderatelyActive: 0,

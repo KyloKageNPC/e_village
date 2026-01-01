@@ -26,18 +26,25 @@ class OfflineProvider with ChangeNotifier {
   bool get hasPendingOperations => _pendingOperationsCount > 0;
 
   Future<void> initialize() async {
-    // Check initial connectivity
-    await _checkConnectivity();
+    try {
+      // Check initial connectivity
+      await _checkConnectivity();
 
-    // Listen to connectivity changes
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((results) {
-      _handleConnectivityChange(results);
-    });
+      // Listen to connectivity changes
+      _connectivitySubscription = _connectivity.onConnectivityChanged.listen((results) {
+        _handleConnectivityChange(results);
+      });
 
-    // Load pending operations count
-    await _updatePendingCount();
+      // Load pending operations count
+      await _updatePendingCount();
 
-    debugPrint('✅ Offline provider initialized (Online: $_isOnline)');
+      debugPrint('✅ Offline provider initialized (Online: $_isOnline)');
+    } catch (e) {
+      debugPrint('Error initializing OfflineProvider: $e');
+      // Don't rethrow - allow the provider to be created with default values
+      _isOnline = false;
+      notifyListeners();
+    }
   }
 
   Future<void> _checkConnectivity() async {

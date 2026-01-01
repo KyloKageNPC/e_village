@@ -40,6 +40,11 @@ class _MyHomePageState extends State<MyHomePage> {
     final savingsProvider = context.read<SavingsProvider>();
 
     if (authProvider.currentUser != null) {
+      // Restore group selection if there was a previously selected group
+      if (groupProvider.selectedGroup == null && groupProvider.savedGroupId != null) {
+        await groupProvider.restoreGroupSelection(authProvider.currentUser!.id);
+      }
+
       await transactionProvider.loadUserTransactions(
         userId: authProvider.currentUser!.id,
         limit: 50,
@@ -80,9 +85,12 @@ class _MyHomePageState extends State<MyHomePage> {
       body: RefreshIndicator(
         onRefresh: _refreshData,
         color: Colors.orange.shade600,
-        child: Column(
-          children: [
-            OfflineIndicator(),
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              OfflineIndicator(),
             Consumer<TransactionProvider>(
               builder: (context, transProvider, _) {
                 return TopNueCard(
@@ -403,7 +411,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             SizedBox(height: 10),
-            Expanded(
+            SizedBox(
+              height: 400,
               child: Consumer<TransactionProvider>(
                 builder: (context, transProvider, _) {
                   if (transProvider.isLoading) {
@@ -575,6 +584,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 20),
           ],
+        ),
         ),
       ),
     );

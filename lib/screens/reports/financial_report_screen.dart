@@ -59,7 +59,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Colors.orange.shade50,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

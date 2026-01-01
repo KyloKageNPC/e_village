@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message_model.dart';
 import '../models/message_reaction_model.dart';
@@ -16,10 +17,7 @@ class ChatService {
     MessageType type = MessageType.text,
   }) async {
     try {
-      print('🔵 Sending message to chat_messages table...');
-      print('   Group ID: $groupId');
-      print('   Sender ID: $senderId');
-      print('   Sender Name: $senderName');
+      developer.log('🔵 Sending message to chat_messages table... Group: $groupId, Sender: $senderId, Name: $senderName', name: 'ChatService');
 
       final response = await _client.from('chat_messages').insert({
         'group_id': groupId,
@@ -29,11 +27,11 @@ class ChatService {
         'type': type.value,
       }).select().single();
 
-      print('✅ Message sent successfully!');
+      developer.log('✅ Message sent successfully!', name: 'ChatService');
       return ChatMessageModel.fromJson(response);
     } catch (e) {
-      print('❌ DATABASE ERROR: $e');
-      print('Error type: ${e.runtimeType}');
+      developer.log('❌ DATABASE ERROR: $e', error: e, name: 'ChatService');
+      developer.log('Error type: ${e.runtimeType}', name: 'ChatService');
       rethrow;
     }
   }
@@ -149,7 +147,7 @@ class ChatService {
     required String emoji,
   }) async {
     try {
-      print('🔵 Adding reaction: $emoji to message $messageId');
+      developer.log('🔵 Adding reaction: $emoji to message $messageId', name: 'ChatService');
 
       final response = await _client.from('message_reactions').insert({
         'message_id': messageId,
@@ -158,10 +156,10 @@ class ChatService {
         'emoji': emoji,
       }).select().single();
 
-      print('✅ Reaction added successfully!');
+      developer.log('✅ Reaction added successfully!', name: 'ChatService');
       return MessageReactionModel.fromJson(response);
     } catch (e) {
-      print('❌ Error adding reaction: $e');
+      developer.log('❌ Error adding reaction: $e', error: e, name: 'ChatService');
       rethrow;
     }
   }
@@ -173,7 +171,7 @@ class ChatService {
     required String emoji,
   }) async {
     try {
-      print('🔵 Removing reaction: $emoji from message $messageId');
+      developer.log('🔵 Removing reaction: $emoji from message $messageId', name: 'ChatService');
 
       await _client
           .from('message_reactions')
@@ -182,9 +180,9 @@ class ChatService {
           .eq('user_id', userId)
           .eq('emoji', emoji);
 
-      print('✅ Reaction removed successfully!');
+      developer.log('✅ Reaction removed successfully!', name: 'ChatService');
     } catch (e) {
-      print('❌ Error removing reaction: $e');
+      developer.log('❌ Error removing reaction: $e', error: e, name: 'ChatService');
       rethrow;
     }
   }
@@ -204,7 +202,7 @@ class ChatService {
           .map((json) => MessageReactionModel.fromJson(json))
           .toList();
     } catch (e) {
-      print('❌ Error getting reactions: $e');
+      developer.log('❌ Error getting reactions: $e', error: e, name: 'ChatService');
       return [];
     }
   }
@@ -234,7 +232,7 @@ class ChatService {
 
       return reactionsMap;
     } catch (e) {
-      print('❌ Error getting reactions for messages: $e');
+      developer.log('❌ Error getting reactions for messages: $e', error: e, name: 'ChatService');
       return {};
     }
   }
@@ -295,7 +293,7 @@ class ChatService {
     bool isAnonymous = false,
   }) async {
     try {
-      print('🔵 Creating poll: $question');
+      developer.log('🔵 Creating poll: $question', name: 'ChatService');
 
       // First, create a system message for the poll
       final messageResponse = await _client.from('chat_messages').insert({
@@ -328,14 +326,14 @@ class ChatService {
         'created_by': createdBy,
       }).select().single();
 
-      print('✅ Poll created successfully!');
+      developer.log('✅ Poll created successfully!', name: 'ChatService');
 
       // Get votes (empty for new poll)
       final voteRecords = await _getPollVoteRecords(pollId: pollResponse['id'] as String);
 
       return PollModel.fromJsonWithVotes(pollResponse, voteRecords);
     } catch (e) {
-      print('❌ Error creating poll: $e');
+      developer.log('❌ Error creating poll: $e', error: e, name: 'ChatService');
       rethrow;
     }
   }
@@ -354,7 +352,7 @@ class ChatService {
       final voteRecords = await _getPollVoteRecords(pollId: response['id'] as String);
       return PollModel.fromJsonWithVotes(response, voteRecords);
     } catch (e) {
-      print('❌ Error getting poll: $e');
+      developer.log('❌ Error getting poll: $e', error: e, name: 'ChatService');
       return null;
     }
   }
@@ -379,7 +377,7 @@ class ChatService {
 
       return polls;
     } catch (e) {
-      print('❌ Error getting group polls: $e');
+      developer.log('❌ Error getting group polls: $e', error: e, name: 'ChatService');
       return {};
     }
   }
@@ -392,7 +390,7 @@ class ChatService {
     required String userName,
   }) async {
     try {
-      print('🔵 Voting on poll: $pollId, option: $optionId');
+      developer.log('🔵 Voting on poll: $pollId, option: $optionId', name: 'ChatService');
 
       await _client.from('poll_votes').insert({
         'poll_id': pollId,
@@ -401,10 +399,10 @@ class ChatService {
         'user_name': userName,
       });
 
-      print('✅ Vote recorded successfully!');
+      developer.log('✅ Vote recorded successfully!', name: 'ChatService');
       return true;
     } catch (e) {
-      print('❌ Error voting on poll: $e');
+      developer.log('❌ Error voting on poll: $e', error: e, name: 'ChatService');
       return false;
     }
   }
@@ -416,7 +414,7 @@ class ChatService {
     required String userId,
   }) async {
     try {
-      print('🔵 Removing vote from poll: $pollId');
+      developer.log('🔵 Removing vote from poll: $pollId', name: 'ChatService');
 
       await _client
           .from('poll_votes')
@@ -425,10 +423,10 @@ class ChatService {
           .eq('option_id', optionId)
           .eq('user_id', userId);
 
-      print('✅ Vote removed successfully!');
+      developer.log('✅ Vote removed successfully!', name: 'ChatService');
       return true;
     } catch (e) {
-      print('❌ Error removing vote: $e');
+      developer.log('❌ Error removing vote: $e', error: e, name: 'ChatService');
       return false;
     }
   }
@@ -444,7 +442,7 @@ class ChatService {
 
       return (response as List).cast<Map<String, dynamic>>();
     } catch (e) {
-      print('❌ Error getting poll votes: $e');
+      developer.log('❌ Error getting poll votes: $e', error: e, name: 'ChatService');
       return [];
     }
   }
@@ -465,7 +463,7 @@ class ChatService {
           .map((json) => json['option_id'] as String)
           .toList();
     } catch (e) {
-      print('❌ Error getting user votes: $e');
+      developer.log('❌ Error getting user votes: $e', error: e, name: 'ChatService');
       return [];
     }
   }
