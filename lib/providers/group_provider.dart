@@ -52,29 +52,26 @@ class GroupProvider with ChangeNotifier {
     
     try {
       final group = await _groupService.getGroupById(_savedGroupId!);
-      if (group != null) {
-        // Verify user is still a member and fully select the group
-        final membership = await _groupService.getMemberRole(
-          groupId: group.id,
-          userId: userId,
-        );
+      // Verify user is still a member and fully select the group
+      final membership = await _groupService.getMemberRole(
+        groupId: group.id,
+        userId: userId,
+      );
 
-        if (membership != null && membership.status == MemberStatus.active) {
-          _selectedGroup = group;
-          _currentMembership = membership;
-          await loadGroupMembers(groupId: group.id);
-          notifyListeners();
-          debugPrint('✅ Group selection restored: ${group.name}');
-        } else {
-          // User is no longer a member, clear saved selection
-          await clearGroupSelection();
-          debugPrint('⚠️ User is no longer a member of the saved group');
-        }
+      if (membership != null && membership.status == MemberStatus.active) {
+        _selectedGroup = group;
+        _currentMembership = membership;
+        await loadGroupMembers(groupId: group.id);
+        notifyListeners();
+        debugPrint('✅ Group selection restored: ${group.name}');
       } else {
-        // Group no longer exists
+        // User is no longer a member, clear saved selection
         await clearGroupSelection();
+        debugPrint('⚠️ User is no longer a member of the saved group');
       }
     } catch (e) {
+      // Group no longer exists or other error - clear saved selection
+      await clearGroupSelection();
       debugPrint('Error restoring group selection: $e');
     }
   }

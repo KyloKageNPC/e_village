@@ -19,6 +19,7 @@ import 'providers/repayment_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/offline_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/payment_provider.dart';
 import 'utils/routes.dart';
 
 void main() async {
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
           return provider;
         }),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
       ],
       child: Consumer2<AuthProvider, GroupProvider>(
         builder: (context, authProvider, groupProvider, _) {
