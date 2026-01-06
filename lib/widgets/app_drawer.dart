@@ -89,7 +89,40 @@ class AppDrawer extends StatelessWidget {
                     route: AppRoutes.myLoans,
                   ),
                   Divider(height: 1),
+                  _buildSectionTitle('Mobile Money'),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.money_off,
+                    title: 'Withdraw Savings',
+                    route: AppRoutes.withdrawal,
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.history,
+                    title: 'Transaction History',
+                    route: AppRoutes.mobileMoneyHistory,
+                  ),
+                  Consumer<GroupProvider>(
+                    builder: (context, groupProvider, _) {
+                      if (!groupProvider.canApproveLoans) {
+                        return SizedBox.shrink();
+                      }
+                      return _buildDrawerItem(
+                        context,
+                        icon: Icons.send,
+                        title: 'Disburse Loans',
+                        route: AppRoutes.pendingDisbursements,
+                      );
+                    },
+                  ),
+                  Divider(height: 1),
                   _buildSectionTitle('Analytics'),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.account_balance,
+                    title: 'Balance Sheet',
+                    route: AppRoutes.balanceSheet,
+                  ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.analytics,
@@ -140,6 +173,12 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.event,
                     title: 'Meetings',
                     route: AppRoutes.meetings,
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.loop,
+                    title: 'Cycles',
+                    route: AppRoutes.cycles,
                   ),
                   Divider(height: 1),
                   _buildSectionTitle('Approvals'),

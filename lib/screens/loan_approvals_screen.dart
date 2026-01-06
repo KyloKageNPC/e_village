@@ -5,6 +5,7 @@ import '../providers/loan_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../models/loan_model.dart';
+import '../services/group_alert_service.dart';
 
 class LoanApprovalsScreen extends StatefulWidget {
   const LoanApprovalsScreen({super.key});
@@ -313,7 +314,7 @@ class _LoanApprovalsScreenState extends State<LoanApprovalsScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _rejectLoan(loan.id),
+                        onPressed: () => _rejectLoan(loan.id, loan),
                         icon: Icon(Icons.close, size: 18),
                         label: Text('Reject'),
                         style: OutlinedButton.styleFrom(
@@ -329,7 +330,7 @@ class _LoanApprovalsScreenState extends State<LoanApprovalsScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _approveLoan(loan.id),
+                        onPressed: () => _approveLoan(loan.id, loan),
                         icon: Icon(Icons.check, size: 18),
                         label: Text('Approve'),
                         style: ElevatedButton.styleFrom(
@@ -376,9 +377,15 @@ class _LoanApprovalsScreenState extends State<LoanApprovalsScreen> {
     );
   }
 
-  Future<void> _approveLoan(String loanId) async {
+  Future<void> _approveLoan(String loanId, LoanModel loan) async {
     final authProvider = context.read<AuthProvider>();
     final loanProvider = context.read<LoanProvider>();
+    final groupProvider = context.read<GroupProvider>();
+    final groupAlertService = GroupAlertService();
+    
+    // Capture values before async gap
+    final approverName = authProvider.userProfile?.fullName ?? 'Treasurer';
+    final groupId = groupProvider.selectedGroup?.id;
 
     if (authProvider.currentUser == null) return;
 
@@ -389,6 +396,22 @@ class _LoanApprovalsScreenState extends State<LoanApprovalsScreen> {
 
     if (!mounted) return;
     if (success) {
+      // Send alert to group chat for transparency
+      if (groupId != null) {
+        final borrowerName = await groupAlertService.getUserName(loan.borrowerId);
+        
+        if (!mounted) return;
+        
+        await groupAlertService.sendLoanApprovalAlert(
+          groupId: groupId,
+          borrowerName: borrowerName,
+          amount: loan.amount,
+          approverName: approverName,
+          purpose: loan.purpose,
+        );
+      }
+      
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Loan approved successfully!'),
@@ -406,13 +429,33 @@ class _LoanApprovalsScreenState extends State<LoanApprovalsScreen> {
     }
   }
 
-  Future<void> _rejectLoan(String loanId) async {
+  Future<void> _rejectLoan(String loanId, LoanModel loan) async {
     final loanProvider = context.read<LoanProvider>();
+    final groupProvider = context.read<GroupProvider>();
+    final groupAlertService = GroupAlertService();
+    
+    // Capture values before async gap
+    final groupId = groupProvider.selectedGroup?.id;
 
     final success = await loanProvider.rejectLoan(loanId: loanId);
 
     if (!mounted) return;
     if (success) {
+      // Send alert to group chat for transparency
+      if (groupId != null) {
+        final borrowerName = await groupAlertService.getUserName(loan.borrowerId);
+        
+        if (!mounted) return;
+        
+        await groupAlertService.sendLoanRejectionAlert(
+          groupId: groupId,
+          borrowerName: borrowerName,
+          amount: loan.amount,
+          purpose: loan.purpose,
+        );
+      }
+      
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Loan rejected'),

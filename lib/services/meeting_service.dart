@@ -21,11 +21,10 @@ class MeetingService {
         'group_id': groupId,
         'title': title,
         'description': description,
-        'scheduled_date': scheduledDate.toIso8601String(),
+        'meeting_date': scheduledDate.toIso8601String(),
         'location': location,
         'agenda': agenda,
         'created_by': createdBy,
-        'status': 'scheduled',
       }).select().single();
 
       return MeetingModel.fromJson(response);
@@ -45,14 +44,14 @@ class MeetingService {
           .from('meetings')
           .select()
           .eq('group_id', groupId)
-          .order('scheduled_date', ascending: false);
+          .order('meeting_date', ascending: false);
 
       if (status != null) {
         query = query.eq('status', status.value);
       }
 
       if (upcomingOnly) {
-        query = query.gte('scheduled_date', DateTime.now().toIso8601String());
+        query = query.gte('meeting_date', DateTime.now().toIso8601String());
       }
 
       final response = await query;
@@ -141,7 +140,7 @@ class MeetingService {
       if (title != null) updates['title'] = title;
       if (description != null) updates['description'] = description;
       if (scheduledDate != null) {
-        updates['scheduled_date'] = scheduledDate.toIso8601String();
+        updates['meeting_date'] = scheduledDate.toIso8601String();
       }
       if (location != null) updates['location'] = location;
       if (agenda != null) updates['agenda'] = agenda;

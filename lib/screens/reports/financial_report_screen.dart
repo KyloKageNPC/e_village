@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/group_provider.dart';
 import '../../models/financial_report_model.dart';
+import '../../services/report_exporter.dart';
 
 class FinancialReportScreen extends StatefulWidget {
   const FinancialReportScreen({super.key});
@@ -40,6 +41,38 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
       startDate: _startDate,
       endDate: _endDate,
     );
+  }
+
+  Future<void> _exportReport() async {
+    final analyticsProvider = context.read<AnalyticsProvider>();
+    final groupProvider = context.read<GroupProvider>();
+    final report = analyticsProvider.financialReport;
+
+    if (report == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No report data to export'),
+          backgroundColor: Colors.orange.shade600,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await ReportExporter.exportFinancialReport(
+        report,
+        groupName: groupProvider.selectedGroup?.name,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -85,6 +118,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf),
+            onPressed: _exportReport,
+            tooltip: 'Export PDF',
+          ),
           IconButton(
             icon: Icon(Icons.date_range),
             onPressed: _showDateRangePicker,

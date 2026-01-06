@@ -33,14 +33,23 @@ class MeetingModel {
       groupId: json['group_id'] as String,
       title: json['title'] as String,
       description: json['description'] as String?,
-      scheduledDate: DateTime.parse(json['scheduled_date'] as String),
+      // Use meeting_date if available, otherwise fall back to scheduled_date
+      scheduledDate: json['meeting_date'] != null
+          ? DateTime.parse(json['meeting_date'] as String)
+          : DateTime.parse(json['scheduled_date'] as String),
       location: json['location'] as String?,
       agenda: json['agenda'] as String?,
       minutes: json['minutes'] as String?,
       createdBy: json['created_by'] as String,
-      status: MeetingStatus.fromString(json['status'] as String),
+      // Handle missing status column - default to scheduled
+      status: json['status'] != null 
+          ? MeetingStatus.fromString(json['status'] as String)
+          : MeetingStatus.scheduled,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Handle missing updated_at column - use created_at as fallback
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.parse(json['created_at'] as String),
     );
   }
 
@@ -50,7 +59,7 @@ class MeetingModel {
       'group_id': groupId,
       'title': title,
       'description': description,
-      'scheduled_date': scheduledDate.toIso8601String(),
+      'meeting_date': scheduledDate.toIso8601String(),
       'location': location,
       'agenda': agenda,
       'minutes': minutes,

@@ -15,6 +15,11 @@ import '../screens/profile_settings_screen.dart';
 import '../screens/reports/financial_report_screen.dart';
 import '../screens/reports/member_analytics_screen.dart';
 import '../screens/reports/group_performance_screen.dart';
+import '../screens/withdrawal_screen.dart';
+import '../screens/mobile_money_history_screen.dart';
+import '../screens/pending_disbursements_screen.dart';
+import '../screens/balance_sheet_screen.dart';
+import '../screens/cycles/cycle_list_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -34,6 +39,11 @@ class AppRoutes {
   static const String financialReport = '/reports/financial';
   static const String memberAnalytics = '/reports/member';
   static const String groupPerformance = '/reports/group';
+  static const String withdrawal = '/withdrawal';
+  static const String mobileMoneyHistory = '/mobile-money-history';
+  static const String pendingDisbursements = '/pending-disbursements';
+  static const String balanceSheet = '/balance-sheet';
+  static const String cycles = '/cycles';
 
   // Route generator
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -78,6 +88,16 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => MemberAnalyticsScreen(memberId: memberId));
       case groupPerformance:
         return MaterialPageRoute(builder: (_) => const GroupPerformanceScreen());
+      case withdrawal:
+        return MaterialPageRoute(builder: (_) => const WithdrawalScreen());
+      case mobileMoneyHistory:
+        return MaterialPageRoute(builder: (_) => const MobileMoneyHistoryScreen());
+      case pendingDisbursements:
+        return MaterialPageRoute(builder: (_) => const PendingDisbursementsScreen());
+      case balanceSheet:
+        return MaterialPageRoute(builder: (_) => const BalanceSheetScreen());
+      case cycles:
+        return MaterialPageRoute(builder: (_) => const CycleListScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

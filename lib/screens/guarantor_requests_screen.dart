@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/guarantor_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/loan_guarantor_model.dart';
+import 'guarantor_request_detail_screen.dart';
 
 class GuarantorRequestsScreen extends StatefulWidget {
   const GuarantorRequestsScreen({super.key});
@@ -36,15 +37,48 @@ class _GuarantorRequestsScreenState extends State<GuarantorRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange.shade100,
+      backgroundColor: Colors.orange.shade50,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Guarantor Requests',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.orange.shade600,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          // Badge count for pending requests
+          Consumer<GuarantorProvider>(
+            builder: (context, guarantorProvider, _) {
+              final pendingCount = guarantorProvider.guarantorRequests
+                  .where((r) => r.isPending)
+                  .length;
+              
+              if (pendingCount == 0) return const SizedBox.shrink();
+              
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$pendingCount pending',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer<GuarantorProvider>(
         builder: (context, guarantorProvider, _) {
@@ -157,7 +191,7 @@ class _GuarantorRequestsScreenState extends State<GuarantorRequestsScreen> {
       case GuarantorStatus.pending:
         statusColor = Colors.orange.shade600;
         statusIcon = Icons.pending;
-        statusText = 'Pending Response';
+        statusText = 'Pending';
         break;
       case GuarantorStatus.approved:
         statusColor = Colors.green.shade600;
@@ -171,243 +205,349 @@ class _GuarantorRequestsScreenState extends State<GuarantorRequestsScreen> {
         break;
     }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to detail screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GuarantorRequestDetailScreen(request: request),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade400, Colors.orange.shade500],
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+        ).then((_) {
+          // Reload after returning from detail screen
+          _loadRequests();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.verified_user, color: Colors.white, size: 24),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Guarantor Request',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header with status badge
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange.shade400, Colors.orange.shade500],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Borrower Avatar
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.white,
+                    child: request.borrowerAvatarUrl != null
+                        ? ClipOval(
+                            child: Image.network(
+                              request.borrowerAvatarUrl!,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildInitials(request);
+                              },
+                            ),
+                          )
+                        : _buildInitials(request),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          request.borrowerDisplayName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Requesting Guarantee',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                ],
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Loan Amount and Purpose
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(statusIcon, size: 16, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Loan Amount',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              currencyFormat.format(request.loanAmount ?? 0),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                request.loanPurposeDisplay,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.blue.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Your Liability
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Your Liability',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.red.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              currencyFormat.format(request.yourLiability),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red.shade700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 12),
 
-          // Content
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Amount
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Guaranteed Amount',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black.withValues(alpha: 0.6),
+                  // Additional Info
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today,
+                          size: 14, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${request.loanDurationMonths ?? 0} months',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
                       ),
-                    ),
-                    Text(
-                      currencyFormat.format(request.guaranteedAmount),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade600,
+                      const SizedBox(width: 16),
+                      Icon(Icons.access_time, size: 14, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        dateFormat.format(request.requestedAt),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Borrower Stats (if available)
+                  if (request.borrowerTotalLoans != null &&
+                      request.borrowerTotalLoans! > 0) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history, size: 16, color: Colors.green.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Track Record: ${request.borrowerCompletedLoans}/${request.borrowerTotalLoans} loans completed',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-                SizedBox(height: 16),
 
-                // Date
-                _buildInfoRow(
-                  'Requested Date',
-                  dateFormat.format(request.requestedAt),
-                ),
-                if (request.respondedAt != null) ...[
-                  SizedBox(height: 12),
-                  _buildInfoRow(
-                    'Responded Date',
-                    dateFormat.format(request.respondedAt!),
-                  ),
-                ],
-                if (request.responseMessage != null) ...[
-                  SizedBox(height: 12),
-                  _buildInfoRow(
-                    'Your Response',
-                    request.responseMessage!,
-                  ),
-                ],
-                SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                // Action Buttons (only for pending requests)
-                if (request.isPending)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _rejectRequest(request.id),
-                          icon: Icon(Icons.close, size: 18),
-                          label: Text('Reject'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade600,
-                            side: BorderSide(color: Colors.red.shade600),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                  // Action prompt for pending requests
+                  if (request.isPending)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.touch_app,
+                              size: 16, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Tap to review complete details and respond',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
+                          Icon(Icons.arrow_forward_ios,
+                              size: 14, color: Colors.orange.shade700),
+                        ],
                       ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _approveRequest(request.id),
-                          icon: Icon(Icons.check, size: 18),
-                          label: Text('Approve'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                    ),
+
+                  // Response message for completed requests
+                  if (!request.isPending && request.responseMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Your Response:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w600,
                             ),
-                            elevation: 0,
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            request.responseMessage!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-              ],
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.black.withValues(alpha: 0.6),
+  Widget _buildInitials(LoanGuarantorModel request) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.orange.shade300,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          request.borrowerInitials,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Future<void> _approveRequest(String guarantorId) async {
-    final guarantorProvider = context.read<GuarantorProvider>();
-
-    final success = await guarantorProvider.approveRequest(
-      guarantorId: guarantorId,
-      message: 'I agree to guarantee this loan',
-    );
-
-    if (!mounted) return;
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Guarantor request approved!'),
-          backgroundColor: Colors.green.shade600,
-        ),
-      );
-      await _loadRequests();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to approve request'),
-          backgroundColor: Colors.red.shade600,
-        ),
-      );
-    }
-  }
-
-  Future<void> _rejectRequest(String guarantorId) async {
-    final guarantorProvider = context.read<GuarantorProvider>();
-
-    final success = await guarantorProvider.rejectRequest(
-      guarantorId: guarantorId,
-      message: 'Unable to guarantee at this time',
-    );
-
-    if (!mounted) return;
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Guarantor request rejected'),
-          backgroundColor: Colors.orange.shade600,
-        ),
-      );
-      await _loadRequests();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to reject request'),
-          backgroundColor: Colors.red.shade600,
-        ),
-      );
-    }
-  }
 }

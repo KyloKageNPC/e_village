@@ -6,6 +6,7 @@ import '../providers/group_provider.dart';
 import '../providers/payment_provider.dart';
 import '../config/pawapay_config.dart';
 import '../widgets/mmo_selector.dart';
+import '../services/group_alert_service.dart';
 import 'contribution_history_screen.dart';
 
 class MakeContributionScreen extends StatefulWidget {
@@ -189,6 +190,7 @@ class _MakeContributionScreenState extends State<MakeContributionScreen> {
     final savingsProvider = context.read<SavingsProvider>();
     final authProvider = context.read<AuthProvider>();
     final groupProvider = context.read<GroupProvider>();
+    final groupAlertService = GroupAlertService();
     
     await showDialog(
       context: context,
@@ -212,6 +214,16 @@ class _MakeContributionScreenState extends State<MakeContributionScreen> {
           amount: amount,
           description: _descriptionController.text.isEmpty
               ? 'Mobile money contribution'
+              : _descriptionController.text,
+        );
+        
+        // Send alert to group chat for transparency
+        await groupAlertService.sendContributionAlert(
+          groupId: groupProvider.selectedGroup!.id,
+          memberName: authProvider.userProfile?.fullName ?? 'A member',
+          amount: amount,
+          description: _descriptionController.text.isEmpty
+              ? null
               : _descriptionController.text,
         );
       }
@@ -249,6 +261,8 @@ class _MakeContributionScreenState extends State<MakeContributionScreen> {
     setState(() => _isSubmitting = true);
 
     final savingsProvider = context.read<SavingsProvider>();
+    final authProvider = context.read<AuthProvider>();
+    final groupAlertService = GroupAlertService();
 
     final success = await savingsProvider.makeContribution(
       groupId: groupId,
@@ -262,6 +276,16 @@ class _MakeContributionScreenState extends State<MakeContributionScreen> {
     setState(() => _isSubmitting = false);
 
     if (success) {
+      // Send alert to group chat for transparency
+      await groupAlertService.sendContributionAlert(
+        groupId: groupId,
+        memberName: authProvider.userProfile?.fullName ?? 'A member',
+        amount: amount,
+        description: _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text,
+      );
+      
       _showMessage('Contribution recorded!', isError: false);
       await Future.delayed(const Duration(seconds: 1));
       if (mounted) {

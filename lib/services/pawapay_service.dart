@@ -38,6 +38,8 @@ class PawapayService {
     // Metadata is optional - PawaPay expects array of objects with unique fieldName
     // Format: [{"fieldName": "myField1", "fieldValue": "value1"}, ...]
     // Each fieldName must be unique across all metadata entries
+    // Currently not used in the deposit request, but kept for future use
+    // ignore: unused_local_variable
     List<Map<String, String>>? pawapayMetadata;
     if (metadata != null && metadata.isNotEmpty) {
       pawapayMetadata = metadata.entries

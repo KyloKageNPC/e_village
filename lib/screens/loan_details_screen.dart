@@ -5,6 +5,7 @@ import '../providers/repayment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/loan_model.dart';
 import '../models/loan_repayment_model.dart';
+import 'mobile_money_repayment_screen.dart';
 
 class LoanDetailsScreen extends StatefulWidget {
   final LoanModel loan;
@@ -169,23 +170,58 @@ class _LoanDetailsScreenState extends State<LoanDetailsScreen> {
 
                 SizedBox(height: 16),
 
-                // Make Repayment Button (only if loan is active)
-                if (widget.loan.status == LoanStatus.active && repaymentProvider.remainingBalance > 0)
+                // Make Repayment Buttons (only if loan is active/disbursed)
+                if ((widget.loan.status == LoanStatus.active || 
+                     widget.loan.status == LoanStatus.disbursed) && 
+                    repaymentProvider.remainingBalance > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showRepaymentDialog(),
-                      icon: Icon(Icons.payment),
-                      label: Text('Make Repayment'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade600,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      children: [
+                        // Mobile Money Payment Button
+                        ElevatedButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MobileMoneyRepaymentScreen(
+                                loan: widget.loan,
+                                remainingBalance: repaymentProvider.remainingBalance,
+                              ),
+                            ),
+                          ).then((result) {
+                            if (result == true) {
+                              _loadData(); // Refresh data if payment was made
+                            }
+                          }),
+                          icon: Icon(Icons.phone_android),
+                          label: Text('Pay via Mobile Money'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade600,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            minimumSize: Size(double.infinity, 50),
+                          ),
                         ),
-                        minimumSize: Size(double.infinity, 50),
-                      ),
+                        SizedBox(height: 12),
+                        // Cash Payment Button
+                        OutlinedButton.icon(
+                          onPressed: () => _showRepaymentDialog(),
+                          icon: Icon(Icons.payments_outlined),
+                          label: Text('Record Cash Payment'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.green.shade700,
+                            side: BorderSide(color: Colors.green.shade600),
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            minimumSize: Size(double.infinity, 50),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

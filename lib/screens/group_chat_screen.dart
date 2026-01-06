@@ -395,6 +395,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Widget _buildMessageBubble(ChatMessageModel message, bool isMe) {
     final timeFormat = DateFormat('h:mm a');
 
+    // Handle system alert messages (loan approvals, contributions, etc.)
+    if (message.type == MessageType.system) {
+      return _buildSystemAlertBubble(message, timeFormat);
+    }
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -465,4 +470,95 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
     );
   }
-}
+  /// Build a system alert bubble for loan approvals, contributions, etc.
+  Widget _buildSystemAlertBubble(ChatMessageModel message, DateFormat dateFormat) {
+    // Determine the alert type and color based on message content
+    Color alertColor;
+    IconData alertIcon;
+    
+    if (message.message.contains('Loan Approved')) {
+      alertColor = Colors.green;
+      alertIcon = Icons.check_circle;
+    } else if (message.message.contains('Loan Request Rejected') || message.message.contains('Loan Rejected')) {
+      alertColor = Colors.red;
+      alertIcon = Icons.cancel;
+    } else if (message.message.contains('Contribution')) {
+      alertColor = Colors.blue;
+      alertIcon = Icons.savings;
+    } else if (message.message.contains('Loan Disbursed')) {
+      alertColor = Colors.purple;
+      alertIcon = Icons.account_balance_wallet;
+    } else if (message.message.contains('Loan Repayment')) {
+      alertColor = Colors.teal;
+      alertIcon = Icons.payment;
+    } else if (message.message.contains('New Loan Request')) {
+      alertColor = Colors.orange;
+      alertIcon = Icons.request_page;
+    } else {
+      alertColor = Colors.grey;
+      alertIcon = Icons.info;
+    }
+
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: alertColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: alertColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: alertColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    alertIcon,
+                    color: alertColor,
+                    size: 20,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message.senderName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: alertColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Text(
+                  dateFormat.format(message.createdAt),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Text(
+              message.message,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }}

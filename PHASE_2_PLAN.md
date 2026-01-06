@@ -229,9 +229,48 @@ dependencies:
 
 ---
 
+#### 4. Group Invite Codes + QR (✅ COMPLETE)
+
+**Status**: ✅ IMPLEMENTED
+
+**Purpose**: Allow group admins to easily invite new members by sharing a unique invite code or QR code. New users can join by scanning the QR or entering the code manually.
+
+**Features Implemented:**
+- ✅ Auto-generated 6-character invite codes for each group
+- ✅ QR code generation showing the invite code
+- ✅ Share invite code via messaging/social apps
+- ✅ Manual code entry to join a group
+- ✅ QR code scanner to join instantly
+- ✅ Group preview before confirming join
+- ✅ Regenerate invite code (for admins)
+- ✅ Duplicate membership prevention
+
+**Files Created/Modified:**
+- `lib/screens/invite_members_screen.dart` - QR code display, share functionality
+- `lib/screens/join_group_by_code_screen.dart` - Code entry + QR scanner tabs
+- `lib/services/group_service.dart` - Added invite code methods
+- `lib/models/village_group.dart` - Added inviteCode, inviteCodeCreatedAt, requireApproval fields
+- `add_group_invite_code.sql` - Database migration for invite_code column
+
+**Dependencies Added:**
+```yaml
+qr_flutter: ^4.1.0      # QR code generation
+mobile_scanner: ^6.0.2   # QR code scanning
+share_plus: ^10.1.4      # Share functionality
+```
+
+**Usage:**
+1. Group admin navigates to group settings → "Invite Members"
+2. Shows QR code + text code (e.g., "ABC123")
+3. Admin shares via WhatsApp, SMS, etc.
+4. New user opens app → "Join Group" → scans QR or enters code
+5. User sees group preview and confirms to join
+
+---
+
 ### **MEDIUM PRIORITY** (Week 3)
 
-#### 4. Cycle Management (10-12 hours)
+#### 5. Cycle Management (10-12 hours)
 
 **Purpose**: Manage lending cycles (common in village banking)
 
@@ -433,6 +472,8 @@ dependencies:
 |---------|--------|--------|----------|--------|
 | Chat Enhancements UI | High | Medium | 🔴 HIGH | Models Done |
 | Reports & Analytics | High | High | 🔴 HIGH | Planned |
+| Guarantor Requests Enhancement | High | Medium | 🔴 HIGH | ✅ COMPLETE |
+| Group Invite Codes + QR | High | Medium | 🔴 HIGH | ✅ COMPLETE |
 | Balance Sheet | Medium | Medium | 🔴 HIGH | Planned |
 | Cycle Management | High | High | 🟡 MEDIUM | Planned |
 | Mobile Money | Very High | Very High | 🟡 MEDIUM | Planned |
